@@ -2,8 +2,8 @@ package cmd
 
 import (
 	"fmt"
-	"strings"
 	"github.com/jackchuka/gh-oss-watch/services"
+	"strings"
 )
 
 func (c *CLI) handleConfigAdd(repo string, eventArgs []string) error {
@@ -22,12 +22,10 @@ func (c *CLI) handleConfigAdd(repo string, eventArgs []string) error {
 		return err
 	}
 
-
 	exists, err := c.githubService.RepoExists(owner, repo)
 
-	
 	if !exists {
-		
+
 		return fmt.Errorf("github repository not found")
 	}
 
