@@ -41,6 +41,12 @@ func (g *GitHubBaseService) GetRepoStats(ctx context.Context, owner, repo string
 	}, nil
 }
 
+// RepoExists() checkes repo existance by fetching it
+func (g *GitHubBaseService) RepoExists(ctx context.Context, owner, repo string) (bool, error) {
+	return  g.client.CheckRepoExists(ctx, owner, repo)
+}
+
+
 // ParseRepoString parses a repository string in the format "owner/repo"
 func ParseRepoString(repoStr string) (owner, repo string, err error) {
 	parts := strings.Split(repoStr, "/")
@@ -82,3 +88,4 @@ func CalculateEventSummary(repoStr string, current *RepoStats, previous RepoStat
 
 	return summary
 }
+
