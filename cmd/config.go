@@ -17,12 +17,12 @@ func (c *CLI) handleConfigAdd(repo string, eventArgs []string) error {
 		events = eventArgs
 	}
 
-	owner, repo, err := services.ParseRepoString(repo)
+	owner, repoName, err := services.ParseRepoString(repo)
 	if err != nil {
 		return err
 	}
 
-	exists, err := c.githubService.RepoExists(owner, repo)
+	exists, err := c.githubService.RepoExists(owner, repoName)
 
 	if !exists {
 
