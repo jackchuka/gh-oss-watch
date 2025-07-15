@@ -47,6 +47,32 @@ func TestHandleConfigAdd_Success(t *testing.T) {
 	}
 }
 
+func TestHandleConfigAdd_NotExistingRepo(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	// testing state
+	repo_str := "notexisting/repo"
+	owner := "notexisting"
+	repoName := "repo"
+
+	mockConfig := mock_services.NewMockConfigService(ctrl)
+	mockCache := mock_services.NewMockCacheService(ctrl)
+	mockGitHub := mock_services.NewMockGitHubService(ctrl)
+	mockOutput := mock_services.NewMockOutput(ctrl)
+
+	cli := NewCLI(mockConfig, mockCache, mockGitHub, mockOutput)
+
+	config := &services.Config{Repos: []services.RepoConfig{}}
+	mockConfig.EXPECT().Load().Return(config, nil)
+	mockGitHub.EXPECT().RepoExists(owner, repoName).Return(false, nil)
+
+	err := cli.handleConfigAdd(repo_str, []string{"invalid_event"})
+
+	if err == nil {
+		t.Error("Expected error for not existing repo, got nil")
+	}
+}
+
 func TestHandleConfigAdd_InvalidEvents(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
