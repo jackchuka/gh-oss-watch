@@ -39,6 +39,14 @@ func NewConcurrentGitHubService() (BatchGitHubService, error) {
 	}, nil
 }
 
+// RepoExists() is a delegation of RepoExists from baseService
+func (g *ConcurrentGitHubService) RepoExists(owner, repo string) (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), g.timeout)
+	defer cancel()
+
+	return g.baseService.RepoExists(ctx, owner, repo)
+}
+
 func (c *ConcurrentGitHubService) GetRepoStats(owner, repo string) (*RepoStats, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
 	defer cancel()

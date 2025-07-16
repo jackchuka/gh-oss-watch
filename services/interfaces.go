@@ -22,12 +22,14 @@ type GitHubAPIClient interface {
 	Get(ctx context.Context, path string, response any) error
 	GetRepoData(ctx context.Context, owner, repo string) (*RepoAPIData, error)
 	GetPullRequests(ctx context.Context, owner, repo string) ([]PullRequestAPIData, error)
+	CheckRepoExists(ctx context.Context, owner, repo string) (bool, error)
 }
 
 type GitHubService interface {
 	GetRepoStats(owner, repo string) (*RepoStats, error)
 	SetMaxConcurrent(maxConcurrent int)
 	SetTimeout(timeout time.Duration)
+	RepoExists(owner, repo string) (bool, error)
 }
 
 type BatchGitHubService interface {

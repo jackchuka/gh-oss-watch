@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -89,6 +90,37 @@ func (c *GitHubAPIClientImpl) GetRepoData(ctx context.Context, owner, repo strin
 	}
 
 	return &repoData, nil
+}
+
+func (c *GitHubAPIClientImpl) CheckRepoExists(ctx context.Context, owner, repo string) (bool, error) {
+	repoPath := fmt.Sprintf("repos/%s/%s", owner, repo)
+	exists := false
+
+	err := WithRetry(ctx, c.retryConfig, func() error {
+		resp, err := c.client.RequestWithContext(ctx, "GET", repoPath, nil)
+		if err != nil {
+			return c.handleAPIError(err, "")
+		}
+		defer func() {
+			// handling error while closing response body
+			if err := resp.Body.Close(); err != nil {
+				log.Printf("error closing body of response: %v", err)
+			}
+		}()
+
+		switch resp.StatusCode {
+		case 200:
+			exists = true
+		case 404:
+		default:
+			return fmt.Errorf("unexpected status code %d", resp.StatusCode)
+		}
+		return nil
+	})
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
 }
 
 func (c *GitHubAPIClientImpl) GetPullRequests(ctx context.Context, owner, repo string) ([]PullRequestAPIData, error) {

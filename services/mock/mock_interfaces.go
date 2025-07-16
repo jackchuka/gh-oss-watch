@@ -163,6 +163,21 @@ func (m *MockGitHubAPIClient) EXPECT() *MockGitHubAPIClientMockRecorder {
 	return m.recorder
 }
 
+// CheckRepoExists mocks base method.
+func (m *MockGitHubAPIClient) CheckRepoExists(ctx context.Context, owner, repo string) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CheckRepoExists", ctx, owner, repo)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CheckRepoExists indicates an expected call of CheckRepoExists.
+func (mr *MockGitHubAPIClientMockRecorder) CheckRepoExists(ctx, owner, repo any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckRepoExists", reflect.TypeOf((*MockGitHubAPIClient)(nil).CheckRepoExists), ctx, owner, repo)
+}
+
 // Get mocks base method.
 func (m *MockGitHubAPIClient) Get(ctx context.Context, path string, response any) error {
 	m.ctrl.T.Helper()
@@ -246,6 +261,21 @@ func (mr *MockGitHubServiceMockRecorder) GetRepoStats(owner, repo any) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRepoStats", reflect.TypeOf((*MockGitHubService)(nil).GetRepoStats), owner, repo)
 }
 
+// RepoExists mocks base method.
+func (m *MockGitHubService) RepoExists(owner, repo string) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RepoExists", owner, repo)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RepoExists indicates an expected call of RepoExists.
+func (mr *MockGitHubServiceMockRecorder) RepoExists(owner, repo any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RepoExists", reflect.TypeOf((*MockGitHubService)(nil).RepoExists), owner, repo)
+}
+
 // SetMaxConcurrent mocks base method.
 func (m *MockGitHubService) SetMaxConcurrent(maxConcurrent int) {
 	m.ctrl.T.Helper()
@@ -322,6 +352,21 @@ func (m *MockBatchGitHubService) GetRepoStatsBatch(repos []string) ([]*services.
 func (mr *MockBatchGitHubServiceMockRecorder) GetRepoStatsBatch(repos any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRepoStatsBatch", reflect.TypeOf((*MockBatchGitHubService)(nil).GetRepoStatsBatch), repos)
+}
+
+// RepoExists mocks base method.
+func (m *MockBatchGitHubService) RepoExists(owner, repo string) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RepoExists", owner, repo)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RepoExists indicates an expected call of RepoExists.
+func (mr *MockBatchGitHubServiceMockRecorder) RepoExists(owner, repo any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RepoExists", reflect.TypeOf((*MockBatchGitHubService)(nil).RepoExists), owner, repo)
 }
 
 // SetMaxConcurrent mocks base method.

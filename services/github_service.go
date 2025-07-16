@@ -40,3 +40,11 @@ func (g *GitHubServiceImpl) SetTimeout(timeout time.Duration) {
 	}
 	g.timeout = timeout
 }
+
+// RepoExists() is a delegation of RepoExists from baseService
+func (g *GitHubServiceImpl) RepoExists(owner, repo string) (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), g.timeout)
+	defer cancel()
+
+	return g.baseService.RepoExists(ctx, owner, repo)
+}
