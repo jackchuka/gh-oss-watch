@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -100,7 +101,15 @@ func (c *GitHubAPIClientImpl) CheckRepoExists(ctx context.Context, owner, repo s
 		if err != nil {
 			return c.handleAPIError(err, "")
 		}
-		defer resp.Body.Close()
+		defer func() {
+			// handling error while closing response body
+			if err := resp.Body.Close(); err != nil {
+				log.Printf("error closing body of response: %v", err)
+			}
+		}()
+		
+		
+		
 
 		switch resp.StatusCode {
 		case 200:
