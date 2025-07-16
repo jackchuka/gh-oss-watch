@@ -94,7 +94,7 @@ func (c *GitHubAPIClientImpl) GetRepoData(ctx context.Context, owner, repo strin
 
 func (c *GitHubAPIClientImpl) CheckRepoExists(ctx context.Context, owner, repo string) (bool, error) {
 	repoPath := fmt.Sprintf("repos/%s/%s", owner, repo)
-	var exists bool = false
+	exists := false
 
 	err := WithRetry(ctx, c.retryConfig, func() error {
 		resp, err := c.client.RequestWithContext(ctx, "GET", repoPath, nil)
