@@ -107,9 +107,6 @@ func (c *GitHubAPIClientImpl) CheckRepoExists(ctx context.Context, owner, repo s
 				log.Printf("error closing body of response: %v", err)
 			}
 		}()
-		
-		
-		
 
 		switch resp.StatusCode {
 		case 200:
