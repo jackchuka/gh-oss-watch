@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -98,24 +99,31 @@ func (c *GitHubAPIClientImpl) CheckRepoExists(ctx context.Context, owner, repo s
 
 	err := WithRetry(ctx, c.retryConfig, func() error {
 		resp, err := c.client.RequestWithContext(ctx, "GET", repoPath, nil)
-		if err != nil {
-			return c.handleAPIError(err, "")
-		}
-		defer func() {
-			// handling error while closing response body
-			if err := resp.Body.Close(); err != nil {
-				log.Printf("error closing body of response: %v", err)
-			}
-		}()
 
-		switch resp.StatusCode {
-		case 200:
-			exists = true
-		case 404:
-		default:
-			return fmt.Errorf("unexpected status code %d", resp.StatusCode)
+		// c.client.RequestWithContext is api.RESTClient.RequestWithContext
+		// it always returns *api.HTTPError if response is not succsess
+		var httpErr *api.HTTPError
+		if errors.As(err, &httpErr) {
+			if httpErr.StatusCode == http.StatusNotFound {
+				exists = false
+				return nil
+			}
+			return c.handleAPIError(err, repoPath)
+		} else if err == nil {
+
+			defer func() {
+				// handling error while closing response body
+				if err := resp.Body.Close(); err != nil {
+					log.Printf("error closing body of response: %v", err)
+				}
+			}()
+
+			if resp.StatusCode == 200 {
+				exists = true
+			}
 		}
-		return nil
+		return c.handleAPIError(err, repoPath)
+
 	})
 	if err != nil {
 		return false, err
