@@ -16,6 +16,7 @@ const (
 	ErrorTypeValidation ErrorType = "validation"
 	ErrorTypeTimeout    ErrorType = "timeout"
 	ErrorTypeRateLimit  ErrorType = "rate_limit"
+	ErrorTypeNotFound   ErrorType = "not_found"
 )
 
 // GitHubError represents a structured error with context
@@ -61,6 +62,18 @@ func NewAPIError(message string, statusCode int, repo string, underlying error) 
 		errorType = ErrorTypeAuth
 	case http.StatusTooManyRequests:
 		errorType = ErrorTypeRateLimit
+	case http.StatusNotFound:
+		errorType = ErrorTypeNotFound
+	case http.StatusBadRequest:
+		errorType = ErrorTypeValidation
+	case http.StatusInternalServerError, http.StatusServiceUnavailable:
+		errorType = ErrorTypeNetwork
+	case http.StatusGatewayTimeout:
+		errorType = ErrorTypeTimeout
+	default:
+		if statusCode >= 500 {
+			errorType = ErrorTypeNetwork
+		}
 	}
 
 	return &GitHubError{

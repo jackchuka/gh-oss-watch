@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/jackchuka/gh-oss-watch/services"
@@ -38,7 +39,7 @@ func TestHandleConfigAdd_Success(t *testing.T) {
 		return nil
 	})
 	mockOutput.EXPECT().Printf(gomock.Any(), gomock.Any()).AnyTimes()
-	mockGitHub.EXPECT().RepoExists(owner, repoName).Return(true, nil)
+	mockGitHub.EXPECT().RepoExists(owner, repoName).Return(nil)
 
 	err := cli.handleConfigAdd(repo_str, []string{"stars", "issues"})
 
@@ -64,7 +65,7 @@ func TestHandleConfigAdd_NotExistingRepo(t *testing.T) {
 
 	config := &services.Config{Repos: []services.RepoConfig{}}
 	mockConfig.EXPECT().Load().Return(config, nil)
-	mockGitHub.EXPECT().RepoExists(owner, repoName).Return(false, nil)
+	mockGitHub.EXPECT().RepoExists(owner, repoName).Return(errors.New("not found"))
 
 	err := cli.handleConfigAdd(repo_str, []string{"invalid_event"})
 
@@ -90,7 +91,7 @@ func TestHandleConfigAdd_InvalidEvents(t *testing.T) {
 
 	config := &services.Config{Repos: []services.RepoConfig{}}
 	mockConfig.EXPECT().Load().Return(config, nil)
-	mockGitHub.EXPECT().RepoExists(owner, repoName).Return(true, nil)
+	mockGitHub.EXPECT().RepoExists(owner, repoName).Return(nil)
 
 	err := cli.handleConfigAdd(repo_str, []string{"invalid_event"})
 

@@ -40,7 +40,7 @@ func NewConcurrentGitHubService() (BatchGitHubService, error) {
 }
 
 // RepoExists() is a delegation of RepoExists from baseService
-func (g *ConcurrentGitHubService) RepoExists(owner, repo string) (bool, error) {
+func (g *ConcurrentGitHubService) RepoExists(owner, repo string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), g.timeout)
 	defer cancel()
 
