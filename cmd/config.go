@@ -23,10 +23,8 @@ func (c *CLI) handleConfigAdd(repo string, eventArgs []string) error {
 		return err
 	}
 
-	if exists, err := c.githubService.RepoExists(owner, repoName); (err == nil) && !exists {
-		return fmt.Errorf("github repository not found")
-	} else if err != nil {
-		return err
+	if err := c.githubService.RepoExists(owner, repoName); err != nil {
+		return fmt.Errorf("repository does not exist or is inaccessible: %w", err)
 	}
 
 	if err := config.AddRepo(repo, events); err != nil {

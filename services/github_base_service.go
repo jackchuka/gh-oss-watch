@@ -42,8 +42,11 @@ func (g *GitHubBaseService) GetRepoStats(ctx context.Context, owner, repo string
 }
 
 // RepoExists() checkes repo existance by fetching it
-func (g *GitHubBaseService) RepoExists(ctx context.Context, owner, repo string) (bool, error) {
-	return g.client.CheckRepoExists(ctx, owner, repo)
+func (g *GitHubBaseService) RepoExists(ctx context.Context, owner, repo string) error {
+	if _, err := g.client.GetRepoData(ctx, owner, repo); err != nil {
+		return err
+	}
+	return nil
 }
 
 // ParseRepoString parses a repository string in the format "owner/repo"
