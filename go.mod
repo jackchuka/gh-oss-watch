@@ -4,7 +4,7 @@ go 1.24.4
 
 require (
 	github.com/cli/go-gh/v2 v2.12.2
-	go.uber.org/mock v0.5.2
+	go.uber.org/mock v0.6.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -19,12 +19,12 @@ require (
 	github.com/muesli/termenv v0.16.0 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/thlib/go-timezone-local v0.0.0-20210907160436-ef149e42d28e // indirect
-	golang.org/x/mod v0.18.0 // indirect
-	golang.org/x/sync v0.12.0 // indirect
-	golang.org/x/sys v0.31.0 // indirect
+	golang.org/x/mod v0.27.0 // indirect
+	golang.org/x/sync v0.16.0 // indirect
+	golang.org/x/sys v0.35.0 // indirect
 	golang.org/x/term v0.30.0 // indirect
 	golang.org/x/text v0.23.0 // indirect
-	golang.org/x/tools v0.22.0 // indirect
+	golang.org/x/tools v0.36.0 // indirect
 )
 
 tool go.uber.org/mock/mockgen
