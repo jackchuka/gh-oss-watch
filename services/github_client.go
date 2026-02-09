@@ -17,6 +17,7 @@ type RepoAPIData struct {
 	ForksCount      int       `json:"forks_count"`
 	OpenIssuesCount int       `json:"open_issues_count"`
 	UpdatedAt       time.Time `json:"updated_at"`
+	DefaultBranch   string    `json:"default_branch"`
 }
 
 type OwnerData struct {
@@ -28,6 +29,19 @@ type PullRequestAPIData struct {
 	Number int    `json:"number"`
 	State  string `json:"state"`
 	Title  string `json:"title"`
+}
+
+type ReleaseAPIData struct {
+	TagName     string    `json:"tag_name"`
+	Name        string    `json:"name"`
+	PublishedAt time.Time `json:"published_at"`
+	Draft       bool      `json:"draft"`
+	Prerelease  bool      `json:"prerelease"`
+}
+
+type CommitsComparisonAPIData struct {
+	AheadBy      int `json:"ahead_by"`
+	TotalCommits int `json:"total_commits"`
 }
 
 type UserAPIData struct {
@@ -100,4 +114,40 @@ func (c *GitHubAPIClientImpl) GetPullRequests(ctx context.Context, owner, repo s
 	}
 
 	return prs, nil
+}
+
+func (c *GitHubAPIClientImpl) GetLatestRelease(ctx context.Context, owner, repo string) (*ReleaseAPIData, error) {
+	releasePath := fmt.Sprintf("repos/%s/%s/releases/latest", owner, repo)
+	var release ReleaseAPIData
+
+	err := c.Get(ctx, releasePath, &release)
+	if err != nil {
+		var httpErr *api.HTTPError
+		if errors.As(err, &httpErr) && httpErr.StatusCode == 404 {
+			return nil, nil // no releases exist
+		}
+		var ghErr *GitHubError
+		if errors.As(err, &ghErr) && ghErr.Type == ErrorTypeNotFound {
+			return nil, nil // no releases exist
+		}
+		return nil, err
+	}
+
+	return &release, nil
+}
+
+func (c *GitHubAPIClientImpl) CompareCommits(ctx context.Context, owner, repo, base, head string) (*CommitsComparisonAPIData, error) {
+	comparePath := fmt.Sprintf("repos/%s/%s/compare/%s...%s", owner, repo, base, head)
+	var comparison CommitsComparisonAPIData
+
+	err := c.Get(ctx, comparePath, &comparison)
+	if err != nil {
+		var httpErr *api.HTTPError
+		if errors.As(err, &httpErr) {
+			return nil, NewAPIError("failed to compare commits", httpErr.StatusCode, fmt.Sprintf("%s/%s", owner, repo), err)
+		}
+		return nil, err
+	}
+
+	return &comparison, nil
 }

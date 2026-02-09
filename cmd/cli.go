@@ -50,6 +50,8 @@ func (c *CLI) Run(args []string) {
 		err = c.handleStatusCommand(cmdArgs, globalFlags)
 	case "dashboard":
 		err = c.handleDashboardCommand(cmdArgs, globalFlags)
+	case "releases":
+		err = c.handleReleasesCommand(cmdArgs, globalFlags)
 	default:
 		c.output.Printf("Unknown command: %s\n", command)
 		c.printUsage()
@@ -121,6 +123,20 @@ func (c *CLI) handleDashboardCommand(_ []string, flags GlobalFlags) error {
 	return c.handleDashboard()
 }
 
+func (c *CLI) handleReleasesCommand(args []string, flags GlobalFlags) error {
+	c.githubService.SetMaxConcurrent(flags.MaxConcurrent)
+	c.githubService.SetTimeout(time.Duration(flags.Timeout) * time.Second)
+
+	onlyUnreleased := false
+	for _, arg := range args {
+		if arg == "--only-unreleased" || arg == "-u" {
+			onlyUnreleased = true
+		}
+	}
+
+	return c.handleReleases(onlyUnreleased)
+}
+
 func (c *CLI) handleAddCommand(args []string) error {
 	if len(args) < 1 {
 		c.output.Println("Usage: gh oss-watch add <repo> [events...]")
@@ -157,6 +173,7 @@ func (c *CLI) printUsage() {
 	c.output.Println("  set <repo> <events...>  Configure events for repo")
 	c.output.Println("  remove <repo>           Remove repo from watch list")
 	c.output.Println("  status                  Show new activity")
+	c.output.Println("  releases                Show release status across all repos")
 	c.output.Println("  dashboard               Show summary across all repos")
 	c.output.Println("")
 	c.output.Println("Performance Flags:")
