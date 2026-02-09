@@ -20,27 +20,52 @@ func (s *statusProcessor) ProcessRepo(repoConfig services.RepoConfig, stats *ser
 
 	summary := services.CalculateEventSummary(repoConfig.Repo, stats, previousState)
 
-	if summary.HasChanges {
+	// Determine if there are visible changes for the configured events
+	hasVisibleChanges := false
+	for _, event := range repoConfig.Events {
+		switch event {
+		case "stars":
+			hasVisibleChanges = hasVisibleChanges || summary.NewStars > 0
+		case "issues":
+			hasVisibleChanges = hasVisibleChanges || summary.NewIssues > 0
+		case "pull_requests":
+			hasVisibleChanges = hasVisibleChanges || summary.NewPRs > 0
+		case "forks":
+			hasVisibleChanges = hasVisibleChanges || summary.NewForks > 0
+		case "releases":
+			hasVisibleChanges = hasVisibleChanges || summary.NewRelease || summary.UnreleasedCount > 0
+		}
+	}
+
+	if hasVisibleChanges {
 		*s.hasChanges = true
-		s.output.Printf("\n📈 %s:\n", repoConfig.Repo)
+		s.output.Printf("\n\U0001F4C8 %s:\n", repoConfig.Repo)
 
 		for _, event := range repoConfig.Events {
 			switch event {
 			case "stars":
 				if summary.NewStars > 0 {
-					s.output.Printf("  ⭐ +%d stars (%d total)\n", summary.NewStars, stats.Stars)
+					s.output.Printf("  \u2B50 +%d stars (%d total)\n", summary.NewStars, stats.Stars)
 				}
 			case "issues":
 				if summary.NewIssues > 0 {
-					s.output.Printf("  🐛 +%d issues (%d open)\n", summary.NewIssues, stats.Issues)
+					s.output.Printf("  \U0001F41B +%d issues (%d open)\n", summary.NewIssues, stats.Issues)
 				}
 			case "pull_requests":
 				if summary.NewPRs > 0 {
-					s.output.Printf("  🔀 +%d pull requests (%d open)\n", summary.NewPRs, stats.PullRequests)
+					s.output.Printf("  \U0001F500 +%d pull requests (%d open)\n", summary.NewPRs, stats.PullRequests)
 				}
 			case "forks":
 				if summary.NewForks > 0 {
-					s.output.Printf("  🍴 +%d forks (%d total)\n", summary.NewForks, stats.Forks)
+					s.output.Printf("  \U0001F374 +%d forks (%d total)\n", summary.NewForks, stats.Forks)
+				}
+			case "releases":
+				if summary.NewRelease {
+					s.output.Printf("  \U0001F4E6 new release %s\n", summary.ReleaseTag)
+				}
+				if summary.UnreleasedCount > 0 {
+					s.output.Printf("  \U0001F4E6 %d unreleased commits since %s (%s ago)\n",
+						summary.UnreleasedCount, summary.ReleaseTag, humanizeAge(stats.ReleaseDate))
 				}
 			}
 		}
@@ -52,6 +77,7 @@ func (s *statusProcessor) ProcessRepo(repoConfig services.RepoConfig, stats *ser
 		LastPRCount:    stats.PullRequests,
 		LastForkCount:  stats.Forks,
 		LastUpdated:    stats.UpdatedAt,
+		LastReleaseTag: stats.LatestRelease,
 	}
 
 	return nil

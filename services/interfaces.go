@@ -22,6 +22,8 @@ type GitHubAPIClient interface {
 	Get(ctx context.Context, path string, response any) error
 	GetRepoData(ctx context.Context, owner, repo string) (*RepoAPIData, error)
 	GetPullRequests(ctx context.Context, owner, repo string) ([]PullRequestAPIData, error)
+	GetLatestRelease(ctx context.Context, owner, repo string) (*ReleaseAPIData, error)
+	CompareCommits(ctx context.Context, owner, repo, base, head string) (*CommitsComparisonAPIData, error)
 }
 
 type GitHubService interface {
@@ -61,23 +63,31 @@ type RepoState struct {
 	LastPRCount    int       `yaml:"last_pr_count"`
 	LastForkCount  int       `yaml:"last_fork_count"`
 	LastUpdated    time.Time `yaml:"last_updated"`
+	LastReleaseTag string    `yaml:"last_release_tag,omitempty"`
 }
 
 type RepoStats struct {
-	Name         string
-	Owner        string
-	Stars        int
-	Issues       int
-	PullRequests int
-	Forks        int
-	UpdatedAt    time.Time
+	Name            string
+	Owner           string
+	Stars           int
+	Issues          int
+	PullRequests    int
+	Forks           int
+	UpdatedAt       time.Time
+	LatestRelease   string
+	ReleaseDate     time.Time
+	UnreleasedCount int
+	DefaultBranch   string
 }
 
 type EventSummary struct {
-	Repo       string
-	NewStars   int
-	NewIssues  int
-	NewPRs     int
-	NewForks   int
-	HasChanges bool
+	Repo            string
+	NewStars        int
+	NewIssues       int
+	NewPRs          int
+	NewForks        int
+	HasChanges      bool
+	NewRelease      bool
+	UnreleasedCount int
+	ReleaseTag      string
 }

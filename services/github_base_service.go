@@ -30,15 +30,34 @@ func (g *GitHubBaseService) GetRepoStats(ctx context.Context, owner, repo string
 		return nil, err
 	}
 
-	return &RepoStats{
-		Name:         repoData.Name,
-		Owner:        repoData.Owner.Login,
-		Stars:        repoData.StargazersCount,
-		Issues:       repoData.OpenIssuesCount,
-		PullRequests: len(prs),
-		Forks:        repoData.ForksCount,
-		UpdatedAt:    repoData.UpdatedAt,
-	}, nil
+	stats := &RepoStats{
+		Name:          repoData.Name,
+		Owner:         repoData.Owner.Login,
+		Stars:         repoData.StargazersCount,
+		Issues:        repoData.OpenIssuesCount,
+		PullRequests:  len(prs),
+		Forks:         repoData.ForksCount,
+		UpdatedAt:     repoData.UpdatedAt,
+		DefaultBranch: repoData.DefaultBranch,
+	}
+
+	release, err := g.client.GetLatestRelease(ctx, owner, repo)
+	if err != nil {
+		// Non-fatal: release info is optional
+		return stats, nil
+	}
+
+	if release != nil {
+		stats.LatestRelease = release.TagName
+		stats.ReleaseDate = release.PublishedAt
+
+		comparison, err := g.client.CompareCommits(ctx, owner, repo, release.TagName, repoData.DefaultBranch)
+		if err == nil {
+			stats.UnreleasedCount = comparison.AheadBy
+		}
+	}
+
+	return stats, nil
 }
 
 // RepoExists() checkes repo existance by fetching it
@@ -86,6 +105,14 @@ func CalculateEventSummary(repoStr string, current *RepoStats, previous RepoStat
 	if current.Forks > previous.LastForkCount {
 		summary.NewForks = current.Forks - previous.LastForkCount
 		summary.HasChanges = true
+	}
+
+	if current.LatestRelease != "" {
+		summary.ReleaseTag = current.LatestRelease
+		summary.UnreleasedCount = current.UnreleasedCount
+		if current.LatestRelease != previous.LastReleaseTag {
+			summary.NewRelease = true
+		}
 	}
 
 	return summary

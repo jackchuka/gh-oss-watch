@@ -83,6 +83,7 @@ func validateEvents(events []string) error {
 		"issues":        true,
 		"pull_requests": true,
 		"forks":         true,
+		"releases":      true,
 	}
 
 	for _, event := range events {

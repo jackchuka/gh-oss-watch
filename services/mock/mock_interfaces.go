@@ -163,6 +163,21 @@ func (m *MockGitHubAPIClient) EXPECT() *MockGitHubAPIClientMockRecorder {
 	return m.recorder
 }
 
+// CompareCommits mocks base method.
+func (m *MockGitHubAPIClient) CompareCommits(ctx context.Context, owner, repo, base, head string) (*services.CommitsComparisonAPIData, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CompareCommits", ctx, owner, repo, base, head)
+	ret0, _ := ret[0].(*services.CommitsComparisonAPIData)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CompareCommits indicates an expected call of CompareCommits.
+func (mr *MockGitHubAPIClientMockRecorder) CompareCommits(ctx, owner, repo, base, head any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CompareCommits", reflect.TypeOf((*MockGitHubAPIClient)(nil).CompareCommits), ctx, owner, repo, base, head)
+}
+
 // Get mocks base method.
 func (m *MockGitHubAPIClient) Get(ctx context.Context, path string, response any) error {
 	m.ctrl.T.Helper()
@@ -175,6 +190,21 @@ func (m *MockGitHubAPIClient) Get(ctx context.Context, path string, response any
 func (mr *MockGitHubAPIClientMockRecorder) Get(ctx, path, response any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockGitHubAPIClient)(nil).Get), ctx, path, response)
+}
+
+// GetLatestRelease mocks base method.
+func (m *MockGitHubAPIClient) GetLatestRelease(ctx context.Context, owner, repo string) (*services.ReleaseAPIData, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetLatestRelease", ctx, owner, repo)
+	ret0, _ := ret[0].(*services.ReleaseAPIData)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetLatestRelease indicates an expected call of GetLatestRelease.
+func (mr *MockGitHubAPIClientMockRecorder) GetLatestRelease(ctx, owner, repo any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLatestRelease", reflect.TypeOf((*MockGitHubAPIClient)(nil).GetLatestRelease), ctx, owner, repo)
 }
 
 // GetPullRequests mocks base method.
