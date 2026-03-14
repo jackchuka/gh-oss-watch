@@ -54,11 +54,13 @@ func (f *PlainFormatter) dim() func(string) string {
 
 func (f *PlainFormatter) RenderStatus(entries []StatusEntry) error {
 	if len(entries) == 0 {
-		fmt.Fprintln(f.w, "No new activity since last check.")
-		return nil
+		_, err := fmt.Fprintln(f.w, "No new activity since last check.")
+		return err
 	}
 
-	fmt.Fprintln(f.w, "\n📈 Status")
+	if _, err := fmt.Fprintln(f.w, "\n📈 Status"); err != nil {
+		return err
+	}
 
 	tp := tableprinter.New(f.w, f.isTTY, f.maxWidth)
 	tp.AddHeader([]string{"Repo", "⭐", "🐛", "🔀", "🍴", "📦"})
@@ -109,7 +111,9 @@ func (f *PlainFormatter) RenderStatus(entries []StatusEntry) error {
 }
 
 func (f *PlainFormatter) RenderDashboard(result DashboardResult) error {
-	fmt.Fprintln(f.w, "\n📊 Dashboard")
+	if _, err := fmt.Fprintln(f.w, "\n📊 Dashboard"); err != nil {
+		return err
+	}
 
 	tp := tableprinter.New(f.w, f.isTTY, f.maxWidth)
 	tp.AddHeader([]string{"Repo", "⭐", "🐛", "🔀", "🍴", "📦", "Updated"})
@@ -138,18 +142,23 @@ func (f *PlainFormatter) RenderDashboard(result DashboardResult) error {
 	}
 
 	totals := result.Totals
-	fmt.Fprintf(f.w, "\n📈 Totals: ⭐ %d  🐛 %d  🔀 %d  🍴 %d",
-		totals.Stars, totals.Issues, totals.PRs, totals.Forks)
-	if totals.NeedRelease > 0 {
-		fmt.Fprintf(f.w, "  📦 %d needs release", totals.NeedRelease)
+	if _, err := fmt.Fprintf(f.w, "\n📈 Totals: ⭐ %d  🐛 %d  🔀 %d  🍴 %d",
+		totals.Stars, totals.Issues, totals.PRs, totals.Forks); err != nil {
+		return err
 	}
-	fmt.Fprintln(f.w)
-
-	return nil
+	if totals.NeedRelease > 0 {
+		if _, err := fmt.Fprintf(f.w, "  📦 %d needs release", totals.NeedRelease); err != nil {
+			return err
+		}
+	}
+	_, err := fmt.Fprintln(f.w)
+	return err
 }
 
 func (f *PlainFormatter) RenderReleases(releases []ReleaseInfo) error {
-	fmt.Fprintln(f.w, "\n📦 Releases")
+	if _, err := fmt.Fprintln(f.w, "\n📦 Releases"); err != nil {
+		return err
+	}
 
 	tp := tableprinter.New(f.w, f.isTTY, f.maxWidth)
 	tp.AddHeader([]string{"Repo", "Release", "Age", "Unreleased", "Status"})
@@ -207,7 +216,9 @@ func (f *PlainFormatter) RenderReleases(releases []ReleaseInfo) error {
 		parts = append(parts, fmt.Sprintf("%d no releases", noReleases))
 	}
 	if len(parts) > 0 {
-		fmt.Fprintf(f.w, "\n %s\n", strings.Join(parts, " · "))
+		if _, err := fmt.Fprintf(f.w, "\n %s\n", strings.Join(parts, " · ")); err != nil {
+			return err
+		}
 	}
 
 	return nil
