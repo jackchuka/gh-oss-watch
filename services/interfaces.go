@@ -81,13 +81,62 @@ type RepoStats struct {
 }
 
 type EventSummary struct {
-	Repo            string
-	NewStars        int
-	NewIssues       int
-	NewPRs          int
-	NewForks        int
-	HasChanges      bool
-	NewRelease      bool
-	UnreleasedCount int
-	ReleaseTag      string
+	Repo            string `json:"repo"`
+	NewStars        int    `json:"newStars"`
+	NewIssues       int    `json:"newIssues"`
+	NewPRs          int    `json:"newPRs"`
+	NewForks        int    `json:"newForks"`
+	HasChanges      bool   `json:"hasChanges"`
+	NewRelease      bool   `json:"newRelease"`
+	UnreleasedCount int    `json:"unreleasedCount"`
+	ReleaseTag      string `json:"releaseTag"`
+}
+
+type StatusEntry struct {
+	EventSummary
+	Events      []string `json:"-"`
+	TotalStars  int      `json:"totalStars"`
+	TotalIssues int      `json:"totalIssues"`
+	TotalPRs    int      `json:"totalPRs"`
+	TotalForks  int      `json:"totalForks"`
+}
+
+type DashboardEntry struct {
+	Repo            string    `json:"repo"`
+	Stars           int       `json:"stars"`
+	Issues          int       `json:"issues"`
+	PullRequests    int       `json:"pullRequests"`
+	Forks           int       `json:"forks"`
+	UpdatedAt       time.Time `json:"updatedAt"`
+	LatestRelease   string    `json:"latestRelease,omitempty"`
+	UnreleasedCount int       `json:"unreleasedCount,omitempty"`
+	Watching        []string  `json:"watching"`
+}
+
+type DashboardTotals struct {
+	Stars       int `json:"stars"`
+	Issues      int `json:"issues"`
+	PRs         int `json:"pullRequests"`
+	Forks       int `json:"forks"`
+	NeedRelease int `json:"needRelease"`
+}
+
+type DashboardResult struct {
+	Repos  []DashboardEntry `json:"repos"`
+	Totals DashboardTotals  `json:"totals"`
+}
+
+type ReleaseInfo struct {
+	Repo            string    `json:"repo"`
+	LatestRelease   string    `json:"latestRelease"`
+	ReleaseDate     time.Time `json:"releaseDate"`
+	ReleaseAge      string    `json:"releaseAge"`
+	UnreleasedCount int       `json:"unreleasedCount"`
+	Status          string    `json:"status"`
+}
+
+type Formatter interface {
+	RenderStatus(entries []StatusEntry) error
+	RenderDashboard(result DashboardResult) error
+	RenderReleases(releases []ReleaseInfo) error
 }

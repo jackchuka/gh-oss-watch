@@ -1,6 +1,9 @@
 package cmd
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/jackchuka/gh-oss-watch/services"
 )
 
@@ -40,7 +43,7 @@ func (c *CLI) processReposWithBatch(
 
 	for i, repoConfig := range config.Repos {
 		if allErrors[i] != nil {
-			c.output.Printf("Error fetching stats for %s: %v\n", repoConfig.Repo, allErrors[i])
+			fmt.Fprintf(os.Stderr, "Error fetching stats for %s: %v\n", repoConfig.Repo, allErrors[i])
 			continue
 		}
 
@@ -64,13 +67,13 @@ func (c *CLI) processReposSequentially(
 	for i, repoConfig := range config.Repos {
 		owner, repo, err := services.ParseRepoString(repoConfig.Repo)
 		if err != nil {
-			c.output.Printf("Error parsing repo %s: %v\n", repoConfig.Repo, err)
+			fmt.Fprintf(os.Stderr, "Error parsing repo %s: %v\n", repoConfig.Repo, err)
 			continue
 		}
 
 		stats, err := c.githubService.GetRepoStats(owner, repo)
 		if err != nil {
-			c.output.Printf("Error fetching stats for %s: %v\n", repoConfig.Repo, err)
+			fmt.Fprintf(os.Stderr, "Error fetching stats for %s: %v\n", repoConfig.Repo, err)
 			continue
 		}
 
