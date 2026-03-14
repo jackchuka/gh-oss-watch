@@ -15,6 +15,7 @@ type CLI struct {
 	cacheService  services.CacheService
 	githubService services.GitHubService
 	output        services.Output
+	formatter     services.Formatter
 }
 
 func NewCLI(configService services.ConfigService, cacheService services.CacheService, githubService services.GitHubService, output services.Output) *CLI {
@@ -59,7 +60,7 @@ func (c *CLI) Run(args []string) {
 	}
 
 	if err != nil {
-		c.output.Printf("Error: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
 }
@@ -67,12 +68,14 @@ func (c *CLI) Run(args []string) {
 type GlobalFlags struct {
 	MaxConcurrent int
 	Timeout       int
+	Format        string
 }
 
 func (c *CLI) parseGlobalFlags(args []string) (GlobalFlags, string, []string) {
 	flags := GlobalFlags{
 		MaxConcurrent: 10,
 		Timeout:       30,
+		Format:        "plain",
 	}
 
 	var command string
@@ -99,11 +102,23 @@ func (c *CLI) parseGlobalFlags(args []string) (GlobalFlags, string, []string) {
 				flags.Timeout = val
 				i++ // Skip next arg
 			}
+		} else if after, ok := strings.CutPrefix(arg, "--format="); ok {
+			flags.Format = after
+		} else if after, ok := strings.CutPrefix(arg, "-f="); ok {
+			flags.Format = after
+		} else if (arg == "--format" || arg == "-f") && i+1 < len(args) {
+			flags.Format = args[i+1]
+			i++
 		} else if command == "" && !strings.HasPrefix(arg, "-") {
 			command = arg
 		} else if command != "" {
 			cmdArgs = append(cmdArgs, arg)
 		}
+	}
+
+	if flags.Format != "plain" && flags.Format != "json" {
+		fmt.Fprintf(os.Stderr, "Unknown format %q, supported: plain, json\n", flags.Format)
+		os.Exit(1)
 	}
 
 	return flags, command, cmdArgs
@@ -112,6 +127,7 @@ func (c *CLI) parseGlobalFlags(args []string) (GlobalFlags, string, []string) {
 func (c *CLI) handleStatusCommand(_ []string, flags GlobalFlags) error {
 	c.githubService.SetMaxConcurrent(flags.MaxConcurrent)
 	c.githubService.SetTimeout(time.Duration(flags.Timeout) * time.Second)
+	c.formatter = services.NewFormatter(flags.Format)
 
 	return c.handleStatus()
 }
@@ -119,6 +135,7 @@ func (c *CLI) handleStatusCommand(_ []string, flags GlobalFlags) error {
 func (c *CLI) handleDashboardCommand(_ []string, flags GlobalFlags) error {
 	c.githubService.SetMaxConcurrent(flags.MaxConcurrent)
 	c.githubService.SetTimeout(time.Duration(flags.Timeout) * time.Second)
+	c.formatter = services.NewFormatter(flags.Format)
 
 	return c.handleDashboard()
 }
@@ -126,6 +143,7 @@ func (c *CLI) handleDashboardCommand(_ []string, flags GlobalFlags) error {
 func (c *CLI) handleReleasesCommand(args []string, flags GlobalFlags) error {
 	c.githubService.SetMaxConcurrent(flags.MaxConcurrent)
 	c.githubService.SetTimeout(time.Duration(flags.Timeout) * time.Second)
+	c.formatter = services.NewFormatter(flags.Format)
 
 	onlyUnreleased := false
 	for _, arg := range args {
@@ -176,7 +194,8 @@ func (c *CLI) printUsage() {
 	c.output.Println("  releases                Show release status across all repos")
 	c.output.Println("  dashboard               Show summary across all repos")
 	c.output.Println("")
-	c.output.Println("Performance Flags:")
+	c.output.Println("Flags:")
+	c.output.Println("  -f, --format <format>   Output format: plain, json (default: plain)")
 	c.output.Println("  --max-concurrent <n>    Max concurrent API requests (default: 10)")
 	c.output.Println("  --timeout <seconds>     Request timeout in seconds (default: 30)")
 	c.output.Println("")
