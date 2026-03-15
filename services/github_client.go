@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/cli/go-gh/v2/pkg/api"
@@ -150,4 +151,80 @@ func (c *GitHubAPIClientImpl) CompareCommits(ctx context.Context, owner, repo, b
 	}
 
 	return &comparison, nil
+}
+
+func (c *GitHubAPIClientImpl) getPaginated(ctx context.Context, path string) ([]UserAPIData, error) {
+	var all []UserAPIData
+	currentPath := path
+
+	for currentPath != "" {
+		var page []UserAPIData
+		nextPath, err := c.getPage(ctx, currentPath, &page)
+		if err != nil {
+			return all, err
+		}
+		all = append(all, page...)
+		currentPath = nextPath
+	}
+
+	return all, nil
+}
+
+func (c *GitHubAPIClientImpl) getPage(ctx context.Context, path string, result *[]UserAPIData) (string, error) {
+	var nextPath string
+
+	err := WithRetry(ctx, c.retryConfig, func() error {
+		resp, err := c.client.RequestWithContext(ctx, "GET", path, nil)
+		if err != nil {
+			return err
+		}
+		defer func() {
+			_ = resp.Body.Close()
+		}()
+
+		decoder := json.NewDecoder(resp.Body)
+		if err := decoder.Decode(result); err != nil {
+			return NewAPIError("failed to decode JSON response", resp.StatusCode, "", err)
+		}
+
+		nextPath = parseNextLink(resp.Header.Get("Link"))
+		return nil
+	})
+
+	return nextPath, err
+}
+
+func parseNextLink(linkHeader string) string {
+	if linkHeader == "" {
+		return ""
+	}
+	for _, part := range strings.Split(linkHeader, ",") {
+		part = strings.TrimSpace(part)
+		if strings.Contains(part, `rel="next"`) {
+			start := strings.Index(part, "<")
+			end := strings.Index(part, ">")
+			if start >= 0 && end > start {
+				link := part[start+1 : end]
+				if idx := strings.Index(link, "/repos/"); idx >= 0 {
+					return link[idx+1:]
+				}
+			}
+		}
+	}
+	return ""
+}
+
+func (c *GitHubAPIClientImpl) GetStargazers(ctx context.Context, owner, repo string) ([]UserAPIData, error) {
+	path := fmt.Sprintf("repos/%s/%s/stargazers?per_page=100", owner, repo)
+
+	users, err := c.getPaginated(ctx, path)
+	if err != nil {
+		var httpErr *api.HTTPError
+		if errors.As(err, &httpErr) {
+			return nil, NewAPIError("failed to fetch stargazers", httpErr.StatusCode, fmt.Sprintf("%s/%s", owner, repo), err)
+		}
+		return nil, err
+	}
+
+	return users, nil
 }

@@ -128,6 +128,55 @@ func TestPlainFormatter_RenderDashboard(t *testing.T) {
 	}
 }
 
+func TestPlainFormatter_RenderFans(t *testing.T) {
+	tests := []struct {
+		name     string
+		result   FansResult
+		contains []string
+	}{
+		{
+			name: "with fans shows table with header and summary",
+			result: FansResult{
+				Fans: []FanEntry{
+					{Login: "userA", Count: 3, Repos: []string{"owner/repo1", "owner/repo2", "owner/repo3"}},
+					{Login: "userB", Count: 1, Repos: []string{"owner/repo1"}},
+				},
+				TotalFans:  2,
+				TotalStars: 4,
+			},
+			contains: []string{"userA", "userB", "3", "1", "🌟", "2 fans", "4 stars"},
+		},
+		{
+			name: "empty fans shows no fans message",
+			result: FansResult{
+				Fans:       []FanEntry{},
+				TotalFans:  0,
+				TotalStars: 0,
+			},
+			contains: []string{"No stargazers found"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var buf bytes.Buffer
+			f := NewPlainFormatter(&buf, false, 120)
+
+			err := f.RenderFans(tt.result)
+			if err != nil {
+				t.Fatalf("RenderFans returned error: %v", err)
+			}
+
+			out := buf.String()
+			for _, s := range tt.contains {
+				if !strings.Contains(out, s) {
+					t.Errorf("expected output to contain %q, got:\n%s", s, out)
+				}
+			}
+		})
+	}
+}
+
 func TestPlainFormatter_RenderReleases(t *testing.T) {
 	releases := []ReleaseInfo{
 		{

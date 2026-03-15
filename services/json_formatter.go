@@ -30,3 +30,10 @@ func (f *JSONFormatter) RenderReleases(releases []ReleaseInfo) error {
 	}
 	return json.NewEncoder(f.w).Encode(releases)
 }
+
+func (f *JSONFormatter) RenderFans(result FansResult) error {
+	if result.Fans == nil {
+		result.Fans = []FanEntry{}
+	}
+	return json.NewEncoder(f.w).Encode(result)
+}

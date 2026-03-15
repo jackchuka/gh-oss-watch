@@ -85,16 +85,6 @@ func NewAPIError(message string, statusCode int, repo string, underlying error) 
 	}
 }
 
-// NewNetworkError creates a new network-related error
-func NewNetworkError(message string, repo string, underlying error) *GitHubError {
-	return &GitHubError{
-		Type:       ErrorTypeNetwork,
-		Message:    message,
-		Repo:       repo,
-		Underlying: underlying,
-	}
-}
-
 // NewTimeoutError creates a new timeout-related error
 func NewTimeoutError(message string, repo string, underlying error) *GitHubError {
 	return &GitHubError{

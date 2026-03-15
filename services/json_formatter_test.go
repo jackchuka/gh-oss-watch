@@ -285,6 +285,96 @@ func TestJSONFormatter_RenderReleases(t *testing.T) {
 	}
 }
 
+func TestJSONFormatter_RenderFans(t *testing.T) {
+	tests := []struct {
+		name   string
+		result FansResult
+		check  func(t *testing.T, got map[string]any)
+	}{
+		{
+			name: "with fans produces valid JSON with correct fields",
+			result: FansResult{
+				Fans: []FanEntry{
+					{Login: "userA", Count: 3, Repos: []string{"owner/repo1", "owner/repo2", "owner/repo3"}},
+					{Login: "userB", Count: 1, Repos: []string{"owner/repo1"}},
+				},
+				TotalFans:  2,
+				TotalStars: 4,
+			},
+			check: func(t *testing.T, got map[string]any) {
+				fans, ok := got["fans"].([]any)
+				if !ok {
+					t.Fatalf("'fans' should be an array, got %T", got["fans"])
+				}
+				if len(fans) != 2 {
+					t.Fatalf("expected 2 fans, got %d", len(fans))
+				}
+				fan := fans[0].(map[string]any)
+				assertEqual(t, "userA", fan["login"])
+				assertEqual(t, float64(3), fan["count"])
+				repos, ok := fan["repos"].([]any)
+				if !ok {
+					t.Fatalf("'repos' should be an array, got %T", fan["repos"])
+				}
+				if len(repos) != 3 {
+					t.Fatalf("expected 3 repos, got %d", len(repos))
+				}
+				assertEqual(t, float64(2), got["totalFans"])
+				assertEqual(t, float64(4), got["totalStars"])
+			},
+		},
+		{
+			name: "empty fans produces empty array not null",
+			result: FansResult{
+				Fans:       []FanEntry{},
+				TotalFans:  0,
+				TotalStars: 0,
+			},
+			check: func(t *testing.T, got map[string]any) {
+				fans, ok := got["fans"].([]any)
+				if !ok {
+					t.Fatalf("'fans' should be an array, got %T", got["fans"])
+				}
+				if len(fans) != 0 {
+					t.Fatalf("expected 0 fans, got %d", len(fans))
+				}
+			},
+		},
+		{
+			name:   "nil fans produces empty array not null",
+			result: FansResult{},
+			check: func(t *testing.T, got map[string]any) {
+				fans, ok := got["fans"].([]any)
+				if !ok {
+					t.Fatalf("'fans' should be an array, got %T", got["fans"])
+				}
+				if len(fans) != 0 {
+					t.Fatalf("expected 0 fans, got %d", len(fans))
+				}
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var buf bytes.Buffer
+			f := NewJSONFormatter(&buf)
+
+			err := f.RenderFans(tt.result)
+			if err != nil {
+				t.Fatalf("RenderFans returned error: %v", err)
+			}
+
+			var got map[string]any
+			if err := json.Unmarshal(buf.Bytes(), &got); err != nil {
+				t.Fatalf("output is not valid JSON: %v\noutput: %s", err, buf.String())
+			}
+
+			tt.check(t, got)
+		})
+	}
+}
+
 func assertEqual(t *testing.T, expected, actual any) {
 	t.Helper()
 	if expected != actual {

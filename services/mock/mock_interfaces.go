@@ -237,6 +237,21 @@ func (mr *MockGitHubAPIClientMockRecorder) GetRepoData(ctx, owner, repo any) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRepoData", reflect.TypeOf((*MockGitHubAPIClient)(nil).GetRepoData), ctx, owner, repo)
 }
 
+// GetStargazers mocks base method.
+func (m *MockGitHubAPIClient) GetStargazers(ctx context.Context, owner, repo string) ([]services.UserAPIData, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetStargazers", ctx, owner, repo)
+	ret0, _ := ret[0].([]services.UserAPIData)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetStargazers indicates an expected call of GetStargazers.
+func (mr *MockGitHubAPIClientMockRecorder) GetStargazers(ctx, owner, repo any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStargazers", reflect.TypeOf((*MockGitHubAPIClient)(nil).GetStargazers), ctx, owner, repo)
+}
+
 // MockGitHubService is a mock of GitHubService interface.
 type MockGitHubService struct {
 	ctrl     *gomock.Controller
@@ -406,6 +421,45 @@ func (mr *MockBatchGitHubServiceMockRecorder) SetTimeout(timeout any) *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTimeout", reflect.TypeOf((*MockBatchGitHubService)(nil).SetTimeout), timeout)
 }
 
+// MockStargazerBatchService is a mock of StargazerBatchService interface.
+type MockStargazerBatchService struct {
+	ctrl     *gomock.Controller
+	recorder *MockStargazerBatchServiceMockRecorder
+	isgomock struct{}
+}
+
+// MockStargazerBatchServiceMockRecorder is the mock recorder for MockStargazerBatchService.
+type MockStargazerBatchServiceMockRecorder struct {
+	mock *MockStargazerBatchService
+}
+
+// NewMockStargazerBatchService creates a new mock instance.
+func NewMockStargazerBatchService(ctrl *gomock.Controller) *MockStargazerBatchService {
+	mock := &MockStargazerBatchService{ctrl: ctrl}
+	mock.recorder = &MockStargazerBatchServiceMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockStargazerBatchService) EXPECT() *MockStargazerBatchServiceMockRecorder {
+	return m.recorder
+}
+
+// GetStargazersBatch mocks base method.
+func (m *MockStargazerBatchService) GetStargazersBatch(repos []string) ([][]services.UserAPIData, []error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetStargazersBatch", repos)
+	ret0, _ := ret[0].([][]services.UserAPIData)
+	ret1, _ := ret[1].([]error)
+	return ret0, ret1
+}
+
+// GetStargazersBatch indicates an expected call of GetStargazersBatch.
+func (mr *MockStargazerBatchServiceMockRecorder) GetStargazersBatch(repos any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStargazersBatch", reflect.TypeOf((*MockStargazerBatchService)(nil).GetStargazersBatch), repos)
+}
+
 // MockOutput is a mock of Output interface.
 type MockOutput struct {
 	ctrl     *gomock.Controller
@@ -461,4 +515,84 @@ func (m *MockOutput) Println(args ...any) {
 func (mr *MockOutputMockRecorder) Println(args ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Println", reflect.TypeOf((*MockOutput)(nil).Println), args...)
+}
+
+// MockFormatter is a mock of Formatter interface.
+type MockFormatter struct {
+	ctrl     *gomock.Controller
+	recorder *MockFormatterMockRecorder
+	isgomock struct{}
+}
+
+// MockFormatterMockRecorder is the mock recorder for MockFormatter.
+type MockFormatterMockRecorder struct {
+	mock *MockFormatter
+}
+
+// NewMockFormatter creates a new mock instance.
+func NewMockFormatter(ctrl *gomock.Controller) *MockFormatter {
+	mock := &MockFormatter{ctrl: ctrl}
+	mock.recorder = &MockFormatterMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockFormatter) EXPECT() *MockFormatterMockRecorder {
+	return m.recorder
+}
+
+// RenderDashboard mocks base method.
+func (m *MockFormatter) RenderDashboard(result services.DashboardResult) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RenderDashboard", result)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RenderDashboard indicates an expected call of RenderDashboard.
+func (mr *MockFormatterMockRecorder) RenderDashboard(result any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderDashboard", reflect.TypeOf((*MockFormatter)(nil).RenderDashboard), result)
+}
+
+// RenderFans mocks base method.
+func (m *MockFormatter) RenderFans(result services.FansResult) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RenderFans", result)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RenderFans indicates an expected call of RenderFans.
+func (mr *MockFormatterMockRecorder) RenderFans(result any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderFans", reflect.TypeOf((*MockFormatter)(nil).RenderFans), result)
+}
+
+// RenderReleases mocks base method.
+func (m *MockFormatter) RenderReleases(releases []services.ReleaseInfo) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RenderReleases", releases)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RenderReleases indicates an expected call of RenderReleases.
+func (mr *MockFormatterMockRecorder) RenderReleases(releases any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderReleases", reflect.TypeOf((*MockFormatter)(nil).RenderReleases), releases)
+}
+
+// RenderStatus mocks base method.
+func (m *MockFormatter) RenderStatus(entries []services.StatusEntry) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RenderStatus", entries)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RenderStatus indicates an expected call of RenderStatus.
+func (mr *MockFormatterMockRecorder) RenderStatus(entries any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderStatus", reflect.TypeOf((*MockFormatter)(nil).RenderStatus), entries)
 }
