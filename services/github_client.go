@@ -56,7 +56,10 @@ type GitHubAPIClientImpl struct {
 }
 
 func NewGitHubAPIClient() (GitHubAPIClient, error) {
-	restClient, err := api.DefaultRESTClient()
+	restClient, err := api.NewRESTClient(api.ClientOptions{
+		EnableCache: true,
+		CacheTTL:    1 * time.Minute,
+	})
 	if err != nil {
 		return nil, NewConfigError("failed to create GitHub API client", err)
 	}
