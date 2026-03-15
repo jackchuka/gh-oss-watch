@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/jackchuka/gh-oss-watch/services"
+	"github.com/spf13/cobra"
 )
 
 type statusProcessor struct {
@@ -60,8 +61,24 @@ func (s *statusProcessor) ProcessRepo(repoConfig services.RepoConfig, stats *ser
 	return nil
 }
 
-func (c *CLI) handleStatus() error {
-	config, err := c.validateConfig()
+var statusCmd = &cobra.Command{
+	Use:   "status",
+	Short: "Show new activity since last check",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		githubService, err := newGitHubService()
+		if err != nil {
+			return err
+		}
+		return handleStatus(services.NewConfigService(), services.NewCacheService(), githubService, newFormatter())
+	},
+}
+
+func init() {
+	rootCmd.AddCommand(statusCmd)
+}
+
+func handleStatus(configService services.ConfigService, cacheService services.CacheService, githubService services.GitHubService, formatter services.Formatter) error {
+	config, err := validateConfig(configService)
 	if err != nil {
 		return err
 	}
@@ -70,7 +87,7 @@ func (c *CLI) handleStatus() error {
 		return nil
 	}
 
-	cache, err := c.cacheService.Load()
+	cache, err := cacheService.Load()
 	if err != nil {
 		return err
 	}
@@ -79,17 +96,17 @@ func (c *CLI) handleStatus() error {
 		cache: cache,
 	}
 
-	err = c.processReposWithBatch(config, processor)
+	err = processReposWithBatch(githubService, config, processor)
 	if err != nil {
 		return err
 	}
 
-	if err := c.formatter.RenderStatus(processor.entries); err != nil {
+	if err := formatter.RenderStatus(processor.entries); err != nil {
 		return err
 	}
 
 	cache.LastCheck = time.Now()
-	err = c.cacheService.Save(cache)
+	err = cacheService.Save(cache)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Warning: Error saving cache: %v\n", err)
 	}

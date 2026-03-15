@@ -4,7 +4,10 @@ import (
 	"time"
 
 	"github.com/jackchuka/gh-oss-watch/services"
+	"github.com/spf13/cobra"
 )
+
+var onlyUnreleased bool
 
 type releaseEntry struct {
 	repo            string
@@ -27,8 +30,25 @@ func (r *releasesProcessor) ProcessRepo(repoConfig services.RepoConfig, stats *s
 	return nil
 }
 
-func (c *CLI) handleReleases(onlyUnreleased bool) error {
-	config, err := c.validateConfig()
+var releasesCmd = &cobra.Command{
+	Use:   "releases",
+	Short: "Show release status across all repos",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		githubService, err := newGitHubService()
+		if err != nil {
+			return err
+		}
+		return handleReleases(services.NewConfigService(), githubService, newFormatter(), onlyUnreleased)
+	},
+}
+
+func init() {
+	releasesCmd.Flags().BoolVarP(&onlyUnreleased, "only-unreleased", "u", false, "Show only repos that need a release")
+	rootCmd.AddCommand(releasesCmd)
+}
+
+func handleReleases(configService services.ConfigService, githubService services.GitHubService, formatter services.Formatter, onlyUnreleased bool) error {
+	config, err := validateConfig(configService)
 	if err != nil {
 		return err
 	}
@@ -39,7 +59,7 @@ func (c *CLI) handleReleases(onlyUnreleased bool) error {
 
 	processor := &releasesProcessor{}
 
-	err = c.processReposWithBatch(config, processor)
+	err = processReposWithBatch(githubService, config, processor)
 	if err != nil {
 		return err
 	}
@@ -75,5 +95,5 @@ func (c *CLI) handleReleases(onlyUnreleased bool) error {
 		releases = append(releases, ri)
 	}
 
-	return c.formatter.RenderReleases(releases)
+	return formatter.RenderReleases(releases)
 }

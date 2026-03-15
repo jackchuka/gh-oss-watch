@@ -1,22 +1,41 @@
 package cmd
 
-func (c *CLI) handleInit() error {
-	config, err := c.configService.Load()
+import (
+	"fmt"
+
+	"github.com/jackchuka/gh-oss-watch/services"
+	"github.com/spf13/cobra"
+)
+
+var initCmd = &cobra.Command{
+	Use:   "init",
+	Short: "Initialize config file",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return handleInit(services.NewConfigService())
+	},
+}
+
+func init() {
+	rootCmd.AddCommand(initCmd)
+}
+
+func handleInit(configService services.ConfigService) error {
+	config, err := configService.Load()
 	if err != nil {
 		return err
 	}
 
-	configPath, err := c.configService.GetConfigPath()
+	configPath, err := configService.GetConfigPath()
 	if err != nil {
 		return err
 	}
 
-	err = c.configService.Save(config)
+	err = configService.Save(config)
 	if err != nil {
 		return err
 	}
 
-	c.output.Printf("Initialized config file at %s\n", configPath)
-	c.output.Println("Use 'gh oss-watch add <repo>' to start watching repositories")
+	fmt.Printf("Initialized config file at %s\n", configPath)
+	fmt.Println("Use 'gh oss-watch add <repo>' to start watching repositories")
 	return nil
 }

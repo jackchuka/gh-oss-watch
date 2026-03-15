@@ -9,76 +9,61 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-func TestHandleInit_Success(t *testing.T) {
-	ctrl := gomock.NewController(t)
-
-	mockConfig := mock_services.NewMockConfigService(ctrl)
-	mockCache := mock_services.NewMockCacheService(ctrl)
-	mockGitHub := mock_services.NewMockGitHubService(ctrl)
-	mockOutput := mock_services.NewMockOutput(ctrl)
-
-	cli := NewCLI(mockConfig, mockCache, mockGitHub, mockOutput)
-
-	// Set up expectations
-	mockConfig.EXPECT().Load().Return(&services.Config{Repos: []services.RepoConfig{}}, nil)
-	mockConfig.EXPECT().GetConfigPath().Return("/mock/config.yaml", nil)
-	mockConfig.EXPECT().Save(gomock.Any()).Return(nil)
-	mockOutput.EXPECT().Printf(gomock.Any(), gomock.Any()).AnyTimes()
-	mockOutput.EXPECT().Println(gomock.Any()).AnyTimes()
-
-	err := cli.handleInit()
-
-	if err != nil {
-		t.Errorf("Expected no error, got %v", err)
-	}
-}
-
-func TestHandleInit_LoadError(t *testing.T) {
-	ctrl := gomock.NewController(t)
-
-	mockConfig := mock_services.NewMockConfigService(ctrl)
-	mockCache := mock_services.NewMockCacheService(ctrl)
-	mockGitHub := mock_services.NewMockGitHubService(ctrl)
-	mockOutput := mock_services.NewMockOutput(ctrl)
-
-	cli := NewCLI(mockConfig, mockCache, mockGitHub, mockOutput)
-
-	// Set up expectation for Load to return error
-	mockConfig.EXPECT().Load().Return(nil, fmt.Errorf("load failed"))
-
-	err := cli.handleInit()
-
-	if err == nil {
-		t.Error("Expected error, got nil")
+func TestHandleInit(t *testing.T) {
+	tests := []struct {
+		name      string
+		setup     func(*mock_services.MockConfigService)
+		wantErr   bool
+		errString string
+	}{
+		{
+			name: "success",
+			setup: func(m *mock_services.MockConfigService) {
+				m.EXPECT().Load().Return(&services.Config{Repos: []services.RepoConfig{}}, nil)
+				m.EXPECT().GetConfigPath().Return("/mock/config.yaml", nil)
+				m.EXPECT().Save(gomock.Any()).Return(nil)
+			},
+		},
+		{
+			name: "load error",
+			setup: func(m *mock_services.MockConfigService) {
+				m.EXPECT().Load().Return(nil, fmt.Errorf("load failed"))
+			},
+			wantErr:   true,
+			errString: "load failed",
+		},
+		{
+			name: "save error",
+			setup: func(m *mock_services.MockConfigService) {
+				m.EXPECT().Load().Return(&services.Config{Repos: []services.RepoConfig{}}, nil)
+				m.EXPECT().GetConfigPath().Return("/mock/config.yaml", nil)
+				m.EXPECT().Save(gomock.Any()).Return(fmt.Errorf("save failed"))
+			},
+			wantErr:   true,
+			errString: "save failed",
+		},
 	}
 
-	if err.Error() != "load failed" {
-		t.Errorf("Expected 'load failed', got %v", err)
-	}
-}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			mockConfig := mock_services.NewMockConfigService(ctrl)
+			tt.setup(mockConfig)
 
-func TestHandleInit_SaveError(t *testing.T) {
-	ctrl := gomock.NewController(t)
+			err := handleInit(mockConfig)
 
-	mockConfig := mock_services.NewMockConfigService(ctrl)
-	mockCache := mock_services.NewMockCacheService(ctrl)
-	mockGitHub := mock_services.NewMockGitHubService(ctrl)
-	mockOutput := mock_services.NewMockOutput(ctrl)
-
-	cli := NewCLI(mockConfig, mockCache, mockGitHub, mockOutput)
-
-	// Set up expectations
-	mockConfig.EXPECT().Load().Return(&services.Config{Repos: []services.RepoConfig{}}, nil)
-	mockConfig.EXPECT().GetConfigPath().Return("/mock/config.yaml", nil)
-	mockConfig.EXPECT().Save(gomock.Any()).Return(fmt.Errorf("save failed"))
-
-	err := cli.handleInit()
-
-	if err == nil {
-		t.Error("Expected error, got nil")
-	}
-
-	if err.Error() != "save failed" {
-		t.Errorf("Expected 'save failed', got %v", err)
+			if tt.wantErr {
+				if err == nil {
+					t.Fatal("expected error, got nil")
+				}
+				if err.Error() != tt.errString {
+					t.Errorf("error = %q, want %q", err.Error(), tt.errString)
+				}
+				return
+			}
+			if err != nil {
+				t.Errorf("unexpected error: %v", err)
+			}
+		})
 	}
 }

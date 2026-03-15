@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/jackchuka/gh-oss-watch/services"
+	"github.com/spf13/cobra"
 )
 
 type dashboardProcessor struct {
@@ -33,8 +34,24 @@ func (d *dashboardProcessor) ProcessRepo(repoConfig services.RepoConfig, stats *
 	return nil
 }
 
-func (c *CLI) handleDashboard() error {
-	config, err := c.validateConfig()
+var dashboardCmd = &cobra.Command{
+	Use:   "dashboard",
+	Short: "Show summary across all repos",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		githubService, err := newGitHubService()
+		if err != nil {
+			return err
+		}
+		return handleDashboard(services.NewConfigService(), githubService, newFormatter())
+	},
+}
+
+func init() {
+	rootCmd.AddCommand(dashboardCmd)
+}
+
+func handleDashboard(configService services.ConfigService, githubService services.GitHubService, formatter services.Formatter) error {
+	config, err := validateConfig(configService)
 	if err != nil {
 		return err
 	}
@@ -45,12 +62,12 @@ func (c *CLI) handleDashboard() error {
 
 	processor := &dashboardProcessor{}
 
-	err = c.processReposWithBatch(config, processor)
+	err = processReposWithBatch(githubService, config, processor)
 	if err != nil {
 		return err
 	}
 
-	return c.formatter.RenderDashboard(services.DashboardResult{
+	return formatter.RenderDashboard(services.DashboardResult{
 		Repos:  processor.entries,
 		Totals: processor.totals,
 	})

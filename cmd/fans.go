@@ -6,7 +6,27 @@ import (
 	"sort"
 
 	"github.com/jackchuka/gh-oss-watch/services"
+	"github.com/spf13/cobra"
 )
+
+var top int
+
+var fansCmd = &cobra.Command{
+	Use:   "fans",
+	Short: "Show who starred your repos",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		githubService, err := newGitHubService()
+		if err != nil {
+			return err
+		}
+		return handleFans(services.NewConfigService(), githubService, newFormatter(), top)
+	},
+}
+
+func init() {
+	fansCmd.Flags().IntVarP(&top, "top", "t", 0, "Show top N fans")
+	rootCmd.AddCommand(fansCmd)
+}
 
 func aggregateFans(repoUsers map[string][]services.UserAPIData) services.FansResult {
 	type fanData struct {
@@ -44,7 +64,6 @@ func aggregateFans(repoUsers map[string][]services.UserAPIData) services.FansRes
 		if fans[i].Count != fans[j].Count {
 			return fans[i].Count > fans[j].Count
 		}
-		// Within same count, sort by first repo name
 		if fans[i].Repos[0] != fans[j].Repos[0] {
 			return fans[i].Repos[0] < fans[j].Repos[0]
 		}
@@ -58,8 +77,8 @@ func aggregateFans(repoUsers map[string][]services.UserAPIData) services.FansRes
 	}
 }
 
-func (c *CLI) handleFans(top int) error {
-	config, err := c.validateConfig()
+func handleFans(configService services.ConfigService, githubService services.GitHubService, formatter services.Formatter, top int) error {
+	config, err := validateConfig(configService)
 	if err != nil {
 		return err
 	}
@@ -68,7 +87,7 @@ func (c *CLI) handleFans(top int) error {
 		return nil
 	}
 
-	stargazerService, ok := c.githubService.(services.StargazerBatchService)
+	stargazerService, ok := githubService.(services.StargazerBatchService)
 	if !ok {
 		return fmt.Errorf("fans command requires a service that supports batch stargazer fetching")
 	}
@@ -95,5 +114,5 @@ func (c *CLI) handleFans(top int) error {
 	if top > 0 && top < len(result.Fans) {
 		result.Fans = result.Fans[:top]
 	}
-	return c.formatter.RenderFans(result)
+	return formatter.RenderFans(result)
 }

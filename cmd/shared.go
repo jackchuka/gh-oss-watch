@@ -7,14 +7,14 @@ import (
 	"github.com/jackchuka/gh-oss-watch/services"
 )
 
-func (c *CLI) validateConfig() (*services.Config, error) {
-	config, err := c.configService.Load()
+func validateConfig(configService services.ConfigService) (*services.Config, error) {
+	config, err := configService.Load()
 	if err != nil {
 		return nil, err
 	}
 
 	if len(config.Repos) == 0 {
-		c.output.Println("No repositories configured. Use 'gh oss-watch add <repo>' to add some.")
+		fmt.Println("No repositories configured. Use 'gh oss-watch add <repo>' to add some.")
 		return config, nil
 	}
 
@@ -25,13 +25,14 @@ type RepoStatsProcessor interface {
 	ProcessRepo(repoConfig services.RepoConfig, stats *services.RepoStats, index int) error
 }
 
-func (c *CLI) processReposWithBatch(
+func processReposWithBatch(
+	githubService services.GitHubService,
 	config *services.Config,
 	processor RepoStatsProcessor,
 ) error {
-	batchService, canBatch := c.githubService.(services.BatchGitHubService)
+	batchService, canBatch := githubService.(services.BatchGitHubService)
 	if !canBatch || len(config.Repos) <= 1 {
-		return c.processReposSequentially(config, processor)
+		return processReposSequentially(githubService, config, processor)
 	}
 
 	repos := make([]string, len(config.Repos))
@@ -60,7 +61,8 @@ func (c *CLI) processReposWithBatch(
 	return nil
 }
 
-func (c *CLI) processReposSequentially(
+func processReposSequentially(
+	githubService services.GitHubService,
 	config *services.Config,
 	processor RepoStatsProcessor,
 ) error {
@@ -71,7 +73,7 @@ func (c *CLI) processReposSequentially(
 			continue
 		}
 
-		stats, err := c.githubService.GetRepoStats(owner, repo)
+		stats, err := githubService.GetRepoStats(owner, repo)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error fetching stats for %s: %v\n", repoConfig.Repo, err)
 			continue
