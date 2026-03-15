@@ -7,30 +7,30 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var initCmd = &cobra.Command{
-	Use:   "init",
-	Short: "Initialize config file",
+var removeCmd = &cobra.Command{
+	Use:   "remove <repo>",
+	Short: "Remove repo from watch list",
+	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		configService, _, _, _, err := getServices()
 		if err != nil {
 			return err
 		}
-		return handleInit(configService)
+		return handleConfigRemove(configService, args[0])
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(initCmd)
+	rootCmd.AddCommand(removeCmd)
 }
 
-func handleInit(configService services.ConfigService) error {
+func handleConfigRemove(configService services.ConfigService, repo string) error {
 	config, err := configService.Load()
 	if err != nil {
 		return err
 	}
 
-	configPath, err := configService.GetConfigPath()
-	if err != nil {
+	if err := config.RemoveRepo(repo); err != nil {
 		return err
 	}
 
@@ -39,7 +39,6 @@ func handleInit(configService services.ConfigService) error {
 		return err
 	}
 
-	fmt.Printf("Initialized config file at %s\n", configPath)
-	fmt.Println("Use 'gh oss-watch add <repo>' to start watching repositories")
+	fmt.Printf("Removed %s from watch list\n", repo)
 	return nil
 }
