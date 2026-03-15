@@ -375,6 +375,104 @@ func TestJSONFormatter_RenderFans(t *testing.T) {
 	}
 }
 
+func TestJSONFormatter_RenderList(t *testing.T) {
+	tests := []struct {
+		name   string
+		result ListResult
+		check  func(t *testing.T, got map[string]any)
+	}{
+		{
+			name: "with repos produces valid JSON with repos and total",
+			result: ListResult{
+				Repos: []RepoConfig{
+					{Repo: "golang/go", Language: "Go", Events: []string{"stars"}},
+				},
+				Total: 1,
+			},
+			check: func(t *testing.T, got map[string]any) {
+				repos, ok := got["repos"].([]any)
+				if !ok {
+					t.Fatalf("'repos' should be an array, got %T", got["repos"])
+				}
+				if len(repos) != 1 {
+					t.Fatalf("expected 1 repo, got %d", len(repos))
+				}
+				repo := repos[0].(map[string]any)
+				assertEqual(t, "golang/go", repo["repo"])
+				assertEqual(t, "Go", repo["language"])
+				assertEqual(t, float64(1), got["total"])
+			},
+		},
+		{
+			name: "empty repos produces empty array not null",
+			result: ListResult{
+				Repos: []RepoConfig{},
+				Total: 0,
+			},
+			check: func(t *testing.T, got map[string]any) {
+				repos, ok := got["repos"].([]any)
+				if !ok {
+					t.Fatalf("'repos' should be an array, got %T", got["repos"])
+				}
+				if len(repos) != 0 {
+					t.Fatalf("expected 0 repos, got %d", len(repos))
+				}
+				assertEqual(t, float64(0), got["total"])
+			},
+		},
+		{
+			name:   "nil repos produces empty array not null",
+			result: ListResult{},
+			check: func(t *testing.T, got map[string]any) {
+				repos, ok := got["repos"].([]any)
+				if !ok {
+					t.Fatalf("'repos' should be an array, got %T", got["repos"])
+				}
+				if len(repos) != 0 {
+					t.Fatalf("expected 0 repos, got %d", len(repos))
+				}
+			},
+		},
+		{
+			name: "empty language renders as empty string not omitted",
+			result: ListResult{
+				Repos: []RepoConfig{
+					{Repo: "owner/repo", Language: "", Events: []string{"stars"}},
+				},
+				Total: 1,
+			},
+			check: func(t *testing.T, got map[string]any) {
+				repos := got["repos"].([]any)
+				repo := repos[0].(map[string]any)
+				lang, ok := repo["language"]
+				if !ok {
+					t.Fatal("expected 'language' key to be present in JSON output")
+				}
+				assertEqual(t, "", lang)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var buf bytes.Buffer
+			f := NewJSONFormatter(&buf)
+
+			err := f.RenderList(tt.result)
+			if err != nil {
+				t.Fatalf("RenderList returned error: %v", err)
+			}
+
+			var got map[string]any
+			if err := json.Unmarshal(buf.Bytes(), &got); err != nil {
+				t.Fatalf("output is not valid JSON: %v\noutput: %s", err, buf.String())
+			}
+
+			tt.check(t, got)
+		})
+	}
+}
+
 func assertEqual(t *testing.T, expected, actual any) {
 	t.Helper()
 	if expected != actual {

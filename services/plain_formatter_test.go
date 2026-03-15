@@ -177,6 +177,63 @@ func TestPlainFormatter_RenderFans(t *testing.T) {
 	}
 }
 
+func TestPlainFormatter_RenderList(t *testing.T) {
+	tests := []struct {
+		name     string
+		result   ListResult
+		contains []string
+	}{
+		{
+			name: "with repos shows table with language and events",
+			result: ListResult{
+				Repos: []RepoConfig{
+					{Repo: "facebook/react", Language: "JavaScript", Events: []string{"stars", "issues"}},
+					{Repo: "golang/go", Language: "Go", Events: []string{"stars", "forks"}},
+				},
+				Total: 2,
+			},
+			contains: []string{"facebook/react", "JavaScript", "golang/go", "Go", "stars, issues", "stars, forks"},
+		},
+		{
+			name: "empty language shows dash",
+			result: ListResult{
+				Repos: []RepoConfig{
+					{Repo: "owner/repo", Language: "", Events: []string{"stars"}},
+				},
+				Total: 1,
+			},
+			contains: []string{"owner/repo", "-"},
+		},
+		{
+			name: "empty repos shows no repos message",
+			result: ListResult{
+				Repos: []RepoConfig{},
+				Total: 0,
+			},
+			contains: []string{"No repos"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var buf bytes.Buffer
+			f := NewPlainFormatter(&buf, false, 120)
+
+			err := f.RenderList(tt.result)
+			if err != nil {
+				t.Fatalf("RenderList returned error: %v", err)
+			}
+
+			out := buf.String()
+			for _, s := range tt.contains {
+				if !strings.Contains(out, s) {
+					t.Errorf("expected output to contain %q, got:\n%s", s, out)
+				}
+			}
+		})
+	}
+}
+
 func TestPlainFormatter_RenderReleases(t *testing.T) {
 	releases := []ReleaseInfo{
 		{

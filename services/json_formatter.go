@@ -37,3 +37,10 @@ func (f *JSONFormatter) RenderFans(result FansResult) error {
 	}
 	return json.NewEncoder(f.w).Encode(result)
 }
+
+func (f *JSONFormatter) RenderList(result ListResult) error {
+	if result.Repos == nil {
+		result.Repos = []RepoConfig{}
+	}
+	return json.NewEncoder(f.w).Encode(result)
+}

@@ -276,6 +276,21 @@ func (m *MockGitHubService) EXPECT() *MockGitHubServiceMockRecorder {
 	return m.recorder
 }
 
+// GetRepoInfo mocks base method.
+func (m *MockGitHubService) GetRepoInfo(owner, repo string) (*services.RepoAPIData, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetRepoInfo", owner, repo)
+	ret0, _ := ret[0].(*services.RepoAPIData)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetRepoInfo indicates an expected call of GetRepoInfo.
+func (mr *MockGitHubServiceMockRecorder) GetRepoInfo(owner, repo any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRepoInfo", reflect.TypeOf((*MockGitHubService)(nil).GetRepoInfo), owner, repo)
+}
+
 // GetRepoStats mocks base method.
 func (m *MockGitHubService) GetRepoStats(owner, repo string) (*services.RepoStats, error) {
 	m.ctrl.T.Helper()
@@ -289,20 +304,6 @@ func (m *MockGitHubService) GetRepoStats(owner, repo string) (*services.RepoStat
 func (mr *MockGitHubServiceMockRecorder) GetRepoStats(owner, repo any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRepoStats", reflect.TypeOf((*MockGitHubService)(nil).GetRepoStats), owner, repo)
-}
-
-// RepoExists mocks base method.
-func (m *MockGitHubService) RepoExists(owner, repo string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RepoExists", owner, repo)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// RepoExists indicates an expected call of RepoExists.
-func (mr *MockGitHubServiceMockRecorder) RepoExists(owner, repo any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RepoExists", reflect.TypeOf((*MockGitHubService)(nil).RepoExists), owner, repo)
 }
 
 // SetMaxConcurrent mocks base method.
@@ -353,6 +354,21 @@ func (m *MockBatchGitHubService) EXPECT() *MockBatchGitHubServiceMockRecorder {
 	return m.recorder
 }
 
+// GetRepoInfo mocks base method.
+func (m *MockBatchGitHubService) GetRepoInfo(owner, repo string) (*services.RepoAPIData, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetRepoInfo", owner, repo)
+	ret0, _ := ret[0].(*services.RepoAPIData)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetRepoInfo indicates an expected call of GetRepoInfo.
+func (mr *MockBatchGitHubServiceMockRecorder) GetRepoInfo(owner, repo any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRepoInfo", reflect.TypeOf((*MockBatchGitHubService)(nil).GetRepoInfo), owner, repo)
+}
+
 // GetRepoStats mocks base method.
 func (m *MockBatchGitHubService) GetRepoStats(owner, repo string) (*services.RepoStats, error) {
 	m.ctrl.T.Helper()
@@ -381,20 +397,6 @@ func (m *MockBatchGitHubService) GetRepoStatsBatch(repos []string) ([]*services.
 func (mr *MockBatchGitHubServiceMockRecorder) GetRepoStatsBatch(repos any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRepoStatsBatch", reflect.TypeOf((*MockBatchGitHubService)(nil).GetRepoStatsBatch), repos)
-}
-
-// RepoExists mocks base method.
-func (m *MockBatchGitHubService) RepoExists(owner, repo string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RepoExists", owner, repo)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// RepoExists indicates an expected call of RepoExists.
-func (mr *MockBatchGitHubServiceMockRecorder) RepoExists(owner, repo any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RepoExists", reflect.TypeOf((*MockBatchGitHubService)(nil).RepoExists), owner, repo)
 }
 
 // SetMaxConcurrent mocks base method.
@@ -567,6 +569,20 @@ func (m *MockFormatter) RenderFans(result services.FansResult) error {
 func (mr *MockFormatterMockRecorder) RenderFans(result any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderFans", reflect.TypeOf((*MockFormatter)(nil).RenderFans), result)
+}
+
+// RenderList mocks base method.
+func (m *MockFormatter) RenderList(result services.ListResult) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RenderList", result)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RenderList indicates an expected call of RenderList.
+func (mr *MockFormatterMockRecorder) RenderList(result any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderList", reflect.TypeOf((*MockFormatter)(nil).RenderList), result)
 }
 
 // RenderReleases mocks base method.

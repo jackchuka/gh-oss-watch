@@ -19,6 +19,7 @@ type RepoAPIData struct {
 	OpenIssuesCount int       `json:"open_issues_count"`
 	UpdatedAt       time.Time `json:"updated_at"`
 	DefaultBranch   string    `json:"default_branch"`
+	Language        string    `json:"language"`
 }
 
 type OwnerData struct {

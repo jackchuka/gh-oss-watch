@@ -252,6 +252,29 @@ func (f *PlainFormatter) RenderFans(result FansResult) error {
 	return err
 }
 
+func (f *PlainFormatter) RenderList(result ListResult) error {
+	if len(result.Repos) == 0 {
+		_, err := fmt.Fprintln(f.w, "No repos tracked. Use 'gh oss-watch add <repo>' to add some.")
+		return err
+	}
+
+	tp := tableprinter.New(f.w, f.isTTY, f.maxWidth)
+	tp.AddHeader([]string{"Repo", "Language", "Events"})
+
+	for _, r := range result.Repos {
+		tp.AddField(r.Repo, tableprinter.WithColor(f.bold()))
+		lang := r.Language
+		if lang == "" {
+			lang = "-"
+		}
+		tp.AddField(lang)
+		tp.AddField(strings.Join(r.Events, ", "), tableprinter.WithColor(f.dim()))
+		tp.EndRow()
+	}
+
+	return tp.Render()
+}
+
 func (f *PlainFormatter) hasEvent(events []string, event string) bool {
 	for _, e := range events {
 		if e == event {
