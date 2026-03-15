@@ -6,11 +6,17 @@ import (
 )
 
 type dashboardProcessor struct {
-	entries []services.DashboardEntry
-	totals  services.DashboardTotals
+	entries   []services.DashboardEntry
+	totals    services.DashboardTotals
+	repoStats []*services.RepoStats
 }
 
 func (d *dashboardProcessor) ProcessRepo(repoConfig services.RepoConfig, stats *services.RepoStats, index int) error {
+	for len(d.repoStats) <= index {
+		d.repoStats = append(d.repoStats, nil)
+	}
+	d.repoStats[index] = stats
+
 	d.entries = append(d.entries, services.DashboardEntry{
 		Repo:            repoConfig.Repo,
 		Stars:           stats.Stars,
@@ -66,6 +72,8 @@ func handleDashboard(configService services.ConfigService, githubService service
 	if err != nil {
 		return err
 	}
+
+	backfillLanguages(configService, config, processor.repoStats)
 
 	return formatter.RenderDashboard(services.DashboardResult{
 		Repos:  processor.entries,

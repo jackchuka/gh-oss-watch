@@ -94,19 +94,23 @@ func validateEvents(events []string) error {
 	return nil
 }
 
-func (c *Config) AddRepo(repo string, events []string) error {
+func (c *Config) AddRepo(repo string, events []string, language string) error {
 	if err := validateEvents(events); err != nil {
 		return err
 	}
 	for i, r := range c.Repos {
 		if r.Repo == repo {
 			c.Repos[i].Events = events
+			if language != "" {
+				c.Repos[i].Language = language
+			}
 			return nil
 		}
 	}
 	c.Repos = append(c.Repos, RepoConfig{
-		Repo:   repo,
-		Events: events,
+		Repo:     repo,
+		Events:   events,
+		Language: language,
 	})
 	return nil
 }

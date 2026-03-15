@@ -30,7 +30,7 @@ type GitHubAPIClient interface {
 type GitHubService interface {
 	GetRepoStats(owner, repo string) (*RepoStats, error)
 	SetMaxConcurrent(maxConcurrent int)
-	RepoExists(owner, repo string) error
+	GetRepoInfo(owner, repo string) (*RepoAPIData, error)
 	SetTimeout(timeout time.Duration)
 }
 
@@ -53,8 +53,9 @@ type Config struct {
 }
 
 type RepoConfig struct {
-	Repo   string   `yaml:"repo"`
-	Events []string `yaml:"events"`
+	Repo     string   `yaml:"repo" json:"repo"`
+	Events   []string `yaml:"events" json:"events"`
+	Language string   `yaml:"language,omitempty" json:"language"`
 }
 
 type CacheData struct {
@@ -83,6 +84,7 @@ type RepoStats struct {
 	ReleaseDate     time.Time
 	UnreleasedCount int
 	DefaultBranch   string
+	Language        string
 }
 
 type EventSummary struct {
@@ -152,9 +154,15 @@ type FansResult struct {
 	TotalStars int        `json:"totalStars"`
 }
 
+type ListResult struct {
+	Repos []RepoConfig `json:"repos"`
+	Total int          `json:"total"`
+}
+
 type Formatter interface {
 	RenderStatus(entries []StatusEntry) error
 	RenderDashboard(result DashboardResult) error
 	RenderReleases(releases []ReleaseInfo) error
 	RenderFans(result FansResult) error
+	RenderList(result ListResult) error
 }

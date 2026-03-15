@@ -24,13 +24,16 @@ func TestHandleConfigAdd(t *testing.T) {
 			setup: func(mc *mock_services.MockConfigService, mg *mock_services.MockGitHubService) {
 				config := &services.Config{Repos: []services.RepoConfig{}}
 				mc.EXPECT().Load().Return(config, nil)
-				mg.EXPECT().RepoExists("microsoft", "vscode").Return(nil)
+				mg.EXPECT().GetRepoInfo("microsoft", "vscode").Return(&services.RepoAPIData{Language: "TypeScript"}, nil)
 				mc.EXPECT().Save(gomock.Any()).DoAndReturn(func(c *services.Config) error {
 					if len(c.Repos) != 1 {
 						t.Errorf("expected 1 repo, got %d", len(c.Repos))
 					}
 					if c.Repos[0].Repo != "microsoft/vscode" {
 						t.Errorf("expected 'microsoft/vscode', got %s", c.Repos[0].Repo)
+					}
+					if c.Repos[0].Language != "TypeScript" {
+						t.Errorf("expected language 'TypeScript', got %s", c.Repos[0].Language)
 					}
 					return nil
 				})
@@ -43,7 +46,7 @@ func TestHandleConfigAdd(t *testing.T) {
 			setup: func(mc *mock_services.MockConfigService, mg *mock_services.MockGitHubService) {
 				config := &services.Config{Repos: []services.RepoConfig{}}
 				mc.EXPECT().Load().Return(config, nil)
-				mg.EXPECT().RepoExists("notexisting", "repo").Return(errors.New("not found"))
+				mg.EXPECT().GetRepoInfo("notexisting", "repo").Return(nil, errors.New("not found"))
 			},
 			wantErr: true,
 		},
@@ -54,7 +57,7 @@ func TestHandleConfigAdd(t *testing.T) {
 			setup: func(mc *mock_services.MockConfigService, mg *mock_services.MockGitHubService) {
 				config := &services.Config{Repos: []services.RepoConfig{}}
 				mc.EXPECT().Load().Return(config, nil)
-				mg.EXPECT().RepoExists("microsoft", "vscode").Return(nil)
+				mg.EXPECT().GetRepoInfo("microsoft", "vscode").Return(&services.RepoAPIData{}, nil)
 			},
 			wantErr: true,
 		},

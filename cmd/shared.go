@@ -61,6 +61,24 @@ func processReposWithBatch(
 	return nil
 }
 
+func backfillLanguages(configService services.ConfigService, config *services.Config, allStats []*services.RepoStats) {
+	needsSave := false
+	for i, repoConfig := range config.Repos {
+		if repoConfig.Language != "" {
+			continue
+		}
+		if i < len(allStats) && allStats[i] != nil && allStats[i].Language != "" {
+			config.Repos[i].Language = allStats[i].Language
+			needsSave = true
+		}
+	}
+	if needsSave {
+		if err := configService.Save(config); err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: failed to backfill language info: %v\n", err)
+		}
+	}
+}
+
 func processReposSequentially(
 	githubService services.GitHubService,
 	config *services.Config,

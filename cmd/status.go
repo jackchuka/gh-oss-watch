@@ -10,11 +10,17 @@ import (
 )
 
 type statusProcessor struct {
-	cache   *services.CacheData
-	entries []services.StatusEntry
+	cache     *services.CacheData
+	entries   []services.StatusEntry
+	repoStats []*services.RepoStats
 }
 
 func (s *statusProcessor) ProcessRepo(repoConfig services.RepoConfig, stats *services.RepoStats, index int) error {
+	for len(s.repoStats) <= index {
+		s.repoStats = append(s.repoStats, nil)
+	}
+	s.repoStats[index] = stats
+
 	previousState, exists := s.cache.Repos[repoConfig.Repo]
 	if !exists {
 		previousState = services.RepoState{}
@@ -100,6 +106,8 @@ func handleStatus(configService services.ConfigService, cacheService services.Ca
 	if err != nil {
 		return err
 	}
+
+	backfillLanguages(configService, config, processor.repoStats)
 
 	if err := formatter.RenderStatus(processor.entries); err != nil {
 		return err

@@ -41,13 +41,14 @@ func handleConfigAdd(configService services.ConfigService, githubService service
 		return err
 	}
 
-	if err := githubService.RepoExists(owner, repoName); err != nil {
+	repoData, err := githubService.GetRepoInfo(owner, repoName)
+	if err != nil {
 		return fmt.Errorf("repository does not exist or is inaccessible: %w", err)
 	}
 
 	normalized := owner + "/" + repoName
 
-	if err := config.AddRepo(normalized, events); err != nil {
+	if err := config.AddRepo(normalized, events, repoData.Language); err != nil {
 		return err
 	}
 

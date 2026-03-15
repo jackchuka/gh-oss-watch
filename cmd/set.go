@@ -36,7 +36,7 @@ func handleConfigSet(configService services.ConfigService, repo string, eventArg
 		return fmt.Errorf("repository %s not found in config. Use 'gh oss-watch add' first", repo)
 	}
 
-	if err := config.AddRepo(repo, eventArgs); err != nil {
+	if err := config.AddRepo(repo, eventArgs, ""); err != nil {
 		return err
 	}
 

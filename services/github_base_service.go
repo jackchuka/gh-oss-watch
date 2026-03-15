@@ -39,6 +39,7 @@ func (g *GitHubBaseService) GetRepoStats(ctx context.Context, owner, repo string
 		Forks:         repoData.ForksCount,
 		UpdatedAt:     repoData.UpdatedAt,
 		DefaultBranch: repoData.DefaultBranch,
+		Language:      repoData.Language,
 	}
 
 	release, err := g.client.GetLatestRelease(ctx, owner, repo)
@@ -60,12 +61,8 @@ func (g *GitHubBaseService) GetRepoStats(ctx context.Context, owner, repo string
 	return stats, nil
 }
 
-// RepoExists() checkes repo existance by fetching it
-func (g *GitHubBaseService) RepoExists(ctx context.Context, owner, repo string) error {
-	if _, err := g.client.GetRepoData(ctx, owner, repo); err != nil {
-		return err
-	}
-	return nil
+func (g *GitHubBaseService) GetRepoInfo(ctx context.Context, owner, repo string) (*RepoAPIData, error) {
+	return g.client.GetRepoData(ctx, owner, repo)
 }
 
 // ParseRepoString parses a repository string into owner and repo.
