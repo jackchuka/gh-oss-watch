@@ -224,6 +224,34 @@ func (f *PlainFormatter) RenderReleases(releases []ReleaseInfo) error {
 	return nil
 }
 
+func (f *PlainFormatter) RenderFans(result FansResult) error {
+	if len(result.Fans) == 0 {
+		_, err := fmt.Fprintln(f.w, "No stargazers found.")
+		return err
+	}
+
+	if _, err := fmt.Fprintln(f.w, "\n🌟 Fans"); err != nil {
+		return err
+	}
+
+	tp := tableprinter.New(f.w, f.isTTY, f.maxWidth)
+	tp.AddHeader([]string{"User", "⭐", "Repos"})
+
+	for _, fan := range result.Fans {
+		tp.AddField(fan.Login, tableprinter.WithColor(f.bold()))
+		tp.AddField(fmt.Sprintf("%d", fan.Count))
+		tp.AddField(strings.Join(fan.Repos, ", "), tableprinter.WithColor(f.dim()))
+		tp.EndRow()
+	}
+
+	if err := tp.Render(); err != nil {
+		return err
+	}
+
+	_, err := fmt.Fprintf(f.w, "\n %d fans · %d stars across all repos\n", result.TotalFans, result.TotalStars)
+	return err
+}
+
 func (f *PlainFormatter) hasEvent(events []string, event string) bool {
 	for _, e := range events {
 		if e == event {

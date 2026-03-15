@@ -24,6 +24,7 @@ type GitHubAPIClient interface {
 	GetPullRequests(ctx context.Context, owner, repo string) ([]PullRequestAPIData, error)
 	GetLatestRelease(ctx context.Context, owner, repo string) (*ReleaseAPIData, error)
 	CompareCommits(ctx context.Context, owner, repo, base, head string) (*CommitsComparisonAPIData, error)
+	GetStargazers(ctx context.Context, owner, repo string) ([]UserAPIData, error)
 }
 
 type GitHubService interface {
@@ -36,6 +37,10 @@ type GitHubService interface {
 type BatchGitHubService interface {
 	GitHubService
 	GetRepoStatsBatch(repos []string) ([]*RepoStats, []error)
+}
+
+type StargazerBatchService interface {
+	GetStargazersBatch(repos []string) ([][]UserAPIData, []error)
 }
 
 type Output interface {
@@ -135,8 +140,21 @@ type ReleaseInfo struct {
 	Status          string    `json:"status"`
 }
 
+type FanEntry struct {
+	Login string   `json:"login"`
+	Count int      `json:"count"`
+	Repos []string `json:"repos"`
+}
+
+type FansResult struct {
+	Fans       []FanEntry `json:"fans"`
+	TotalFans  int        `json:"totalFans"`
+	TotalStars int        `json:"totalStars"`
+}
+
 type Formatter interface {
 	RenderStatus(entries []StatusEntry) error
 	RenderDashboard(result DashboardResult) error
 	RenderReleases(releases []ReleaseInfo) error
+	RenderFans(result FansResult) error
 }

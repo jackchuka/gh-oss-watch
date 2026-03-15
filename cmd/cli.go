@@ -53,6 +53,8 @@ func (c *CLI) Run(args []string) {
 		err = c.handleDashboardCommand(cmdArgs, globalFlags)
 	case "releases":
 		err = c.handleReleasesCommand(cmdArgs, globalFlags)
+	case "fans":
+		err = c.handleFansCommand(cmdArgs, globalFlags)
 	default:
 		c.output.Printf("Unknown command: %s\n", command)
 		c.printUsage()
@@ -155,6 +157,31 @@ func (c *CLI) handleReleasesCommand(args []string, flags GlobalFlags) error {
 	return c.handleReleases(onlyUnreleased)
 }
 
+func (c *CLI) handleFansCommand(args []string, flags GlobalFlags) error {
+	c.githubService.SetMaxConcurrent(flags.MaxConcurrent)
+	c.githubService.SetTimeout(time.Duration(flags.Timeout) * time.Second)
+	c.formatter = services.NewFormatter(flags.Format)
+
+	top := 0
+	for i, arg := range args {
+		if after, ok := strings.CutPrefix(arg, "--top="); ok {
+			if val, err := strconv.Atoi(after); err == nil {
+				top = val
+			}
+		} else if after, ok := strings.CutPrefix(arg, "-t="); ok {
+			if val, err := strconv.Atoi(after); err == nil {
+				top = val
+			}
+		} else if (arg == "--top" || arg == "-t") && i+1 < len(args) {
+			if val, err := strconv.Atoi(args[i+1]); err == nil {
+				top = val
+			}
+		}
+	}
+
+	return c.handleFans(top)
+}
+
 func (c *CLI) handleAddCommand(args []string) error {
 	if len(args) < 1 {
 		c.output.Println("Usage: gh oss-watch add <repo> [events...]")
@@ -192,6 +219,7 @@ func (c *CLI) printUsage() {
 	c.output.Println("  remove <repo>           Remove repo from watch list")
 	c.output.Println("  status                  Show new activity")
 	c.output.Println("  releases                Show release status across all repos")
+	c.output.Println("  fans [--top N]          Show who starred your repos")
 	c.output.Println("  dashboard               Show summary across all repos")
 	c.output.Println("")
 	c.output.Println("Flags:")

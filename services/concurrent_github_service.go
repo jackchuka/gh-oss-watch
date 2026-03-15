@@ -134,6 +134,100 @@ func (c *ConcurrentGitHubService) worker(ctx context.Context, wg *sync.WaitGroup
 	}
 }
 
+type StargazerJob struct {
+	Owner string
+	Repo  string
+	Index int
+}
+
+type StargazerResult struct {
+	Users []UserAPIData
+	Repo  string
+	Index int
+	Error error
+}
+
+func (c *ConcurrentGitHubService) GetStargazersBatch(repos []string) ([][]UserAPIData, []error) {
+	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
+	defer cancel()
+
+	jobs := make(chan StargazerJob, len(repos))
+	results := make(chan StargazerResult, len(repos))
+
+	var wg sync.WaitGroup
+	for i := 0; i < c.maxWorkers; i++ {
+		wg.Add(1)
+		go c.stargazerWorker(ctx, &wg, jobs, results)
+	}
+
+	go func() {
+		defer close(jobs)
+		for i, repoStr := range repos {
+			owner, repo, err := ParseRepoString(repoStr)
+			if err != nil {
+				results <- StargazerResult{
+					Repo:  repoStr,
+					Index: i,
+					Error: fmt.Errorf("invalid repo format %s: %w", repoStr, err),
+				}
+				continue
+			}
+
+			select {
+			case jobs <- StargazerJob{Owner: owner, Repo: repo, Index: i}:
+			case <-ctx.Done():
+				results <- StargazerResult{
+					Repo:  repoStr,
+					Index: i,
+					Error: ctx.Err(),
+				}
+				return
+			}
+		}
+	}()
+
+	go func() {
+		wg.Wait()
+		close(results)
+	}()
+
+	users := make([][]UserAPIData, len(repos))
+	errors := make([]error, len(repos))
+
+	for result := range results {
+		if result.Index < len(repos) {
+			users[result.Index] = result.Users
+			errors[result.Index] = result.Error
+		}
+	}
+
+	return users, errors
+}
+
+func (c *ConcurrentGitHubService) stargazerWorker(ctx context.Context, wg *sync.WaitGroup, jobs <-chan StargazerJob, results chan<- StargazerResult) {
+	defer wg.Done()
+
+	for {
+		select {
+		case job, ok := <-jobs:
+			if !ok {
+				return
+			}
+
+			stargazers, err := c.baseService.client.GetStargazers(ctx, job.Owner, job.Repo)
+			results <- StargazerResult{
+				Users: stargazers,
+				Repo:  fmt.Sprintf("%s/%s", job.Owner, job.Repo),
+				Index: job.Index,
+				Error: err,
+			}
+
+		case <-ctx.Done():
+			return
+		}
+	}
+}
+
 func (c *ConcurrentGitHubService) SetMaxConcurrent(maxConcurrent int) {
 	if maxConcurrent <= 0 {
 		maxConcurrent = 10
