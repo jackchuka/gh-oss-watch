@@ -12,15 +12,16 @@ var (
 	timeout       int
 )
 
-func getServices() (services.ConfigService, services.CacheService, services.BatchGitHubService, services.Formatter, error) {
-	configService := services.NewConfigService()
-	cacheService := services.NewCacheService()
+func newGitHubService() (services.BatchGitHubService, error) {
 	githubService, err := services.NewConcurrentGitHubService()
 	if err != nil {
-		return nil, nil, nil, nil, err
+		return nil, err
 	}
 	githubService.SetMaxConcurrent(maxConcurrent)
 	githubService.SetTimeout(time.Duration(timeout) * time.Second)
-	formatter := services.NewFormatter(format)
-	return configService, cacheService, githubService, formatter, nil
+	return githubService, nil
+}
+
+func newFormatter() services.Formatter {
+	return services.NewFormatter(format)
 }

@@ -34,11 +34,11 @@ var releasesCmd = &cobra.Command{
 	Use:   "releases",
 	Short: "Show release status across all repos",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		configService, _, githubService, formatter, err := getServices()
+		githubService, err := newGitHubService()
 		if err != nil {
 			return err
 		}
-		return handleReleases(configService, githubService, formatter, onlyUnreleased)
+		return handleReleases(services.NewConfigService(), githubService, newFormatter(), onlyUnreleased)
 	},
 }
 

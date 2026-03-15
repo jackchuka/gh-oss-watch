@@ -38,11 +38,11 @@ var dashboardCmd = &cobra.Command{
 	Use:   "dashboard",
 	Short: "Show summary across all repos",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		configService, _, githubService, formatter, err := getServices()
+		githubService, err := newGitHubService()
 		if err != nil {
 			return err
 		}
-		return handleDashboard(configService, githubService, formatter)
+		return handleDashboard(services.NewConfigService(), githubService, newFormatter())
 	},
 }
 

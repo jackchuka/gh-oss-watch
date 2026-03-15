@@ -65,11 +65,11 @@ var statusCmd = &cobra.Command{
 	Use:   "status",
 	Short: "Show new activity since last check",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		configService, cacheService, githubService, formatter, err := getServices()
+		githubService, err := newGitHubService()
 		if err != nil {
 			return err
 		}
-		return handleStatus(configService, cacheService, githubService, formatter)
+		return handleStatus(services.NewConfigService(), services.NewCacheService(), githubService, newFormatter())
 	},
 }
 

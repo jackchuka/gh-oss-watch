@@ -13,11 +13,11 @@ var addCmd = &cobra.Command{
 	Short: "Add repo to watch list",
 	Args:  cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		configService, _, githubService, _, err := getServices()
+		githubService, err := newGitHubService()
 		if err != nil {
 			return err
 		}
-		return handleConfigAdd(configService, githubService, args[0], args[1:])
+		return handleConfigAdd(services.NewConfigService(), githubService, args[0], args[1:])
 	},
 }
 

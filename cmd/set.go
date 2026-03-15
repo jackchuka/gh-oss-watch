@@ -13,11 +13,7 @@ var setCmd = &cobra.Command{
 	Short: "Configure events for repo",
 	Args:  cobra.MinimumNArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		configService, _, _, _, err := getServices()
-		if err != nil {
-			return err
-		}
-		return handleConfigSet(configService, args[0], args[1:])
+		return handleConfigSet(services.NewConfigService(), args[0], args[1:])
 	},
 }
 

@@ -12,11 +12,7 @@ var removeCmd = &cobra.Command{
 	Short: "Remove repo from watch list",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		configService, _, _, _, err := getServices()
-		if err != nil {
-			return err
-		}
-		return handleConfigRemove(configService, args[0])
+		return handleConfigRemove(services.NewConfigService(), args[0])
 	},
 }
 

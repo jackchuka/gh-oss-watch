@@ -15,11 +15,11 @@ var fansCmd = &cobra.Command{
 	Use:   "fans",
 	Short: "Show who starred your repos",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		configService, _, githubService, formatter, err := getServices()
+		githubService, err := newGitHubService()
 		if err != nil {
 			return err
 		}
-		return handleFans(configService, githubService, formatter, top)
+		return handleFans(services.NewConfigService(), githubService, newFormatter(), top)
 	},
 }
 

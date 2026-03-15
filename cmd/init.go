@@ -11,11 +11,7 @@ var initCmd = &cobra.Command{
 	Use:   "init",
 	Short: "Initialize config file",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		configService, _, _, _, err := getServices()
-		if err != nil {
-			return err
-		}
-		return handleInit(configService)
+		return handleInit(services.NewConfigService())
 	},
 }
 
