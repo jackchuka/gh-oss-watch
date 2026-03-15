@@ -68,9 +68,17 @@ func (g *GitHubBaseService) RepoExists(ctx context.Context, owner, repo string) 
 	return nil
 }
 
-// ParseRepoString parses a repository string in the format "owner/repo"
+// ParseRepoString parses a repository string into owner and repo.
+// Accepts: "owner/repo", "https://github.com/owner/repo", "github.com/owner/repo.git", etc.
 func ParseRepoString(repoStr string) (owner, repo string, err error) {
-	parts := strings.Split(repoStr, "/")
+	s := strings.TrimSpace(repoStr)
+	s = strings.TrimSuffix(s, ".git")
+	s = strings.TrimPrefix(s, "https://")
+	s = strings.TrimPrefix(s, "http://")
+	s = strings.TrimPrefix(s, "github.com/")
+	s = strings.TrimSuffix(s, "/")
+
+	parts := strings.Split(s, "/")
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
 		return "", "", NewValidationError(
 			fmt.Sprintf("invalid repo format: %s (expected owner/repo)", repoStr),

@@ -27,7 +27,10 @@ func (c *CLI) handleConfigAdd(repo string, eventArgs []string) error {
 		return fmt.Errorf("repository does not exist or is inaccessible: %w", err)
 	}
 
-	if err := config.AddRepo(repo, events); err != nil {
+	// Normalize to owner/repo format regardless of input
+	normalized := owner + "/" + repoName
+
+	if err := config.AddRepo(normalized, events); err != nil {
 		return err
 	}
 
@@ -36,7 +39,7 @@ func (c *CLI) handleConfigAdd(repo string, eventArgs []string) error {
 		return err
 	}
 
-	c.output.Printf("Added %s to watch list with events: %s\n", repo, strings.Join(events, ", "))
+	c.output.Printf("Added %s to watch list with events: %s\n", normalized, strings.Join(events, ", "))
 	return nil
 }
 
