@@ -44,6 +44,10 @@ type StargazerBatchService interface {
 	GetStargazersBatch(repos []string) ([][]UserAPIData, []error)
 }
 
+type DependabotAlertsBatchService interface {
+	GetDependabotAlertsBatch(repos []string) ([][]SecurityAlert, []error)
+}
+
 type Output interface {
 	Printf(format string, args ...any)
 	Println(args ...any)

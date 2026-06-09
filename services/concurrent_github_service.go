@@ -226,6 +226,96 @@ func (c *ConcurrentGitHubService) stargazerWorker(ctx context.Context, wg *sync.
 	}
 }
 
+type AlertJob struct {
+	Owner string
+	Repo  string
+	Index int
+}
+
+type AlertResult struct {
+	Alerts []SecurityAlert
+	Index  int
+	Error  error
+}
+
+func (c *ConcurrentGitHubService) GetDependabotAlertsBatch(repos []string) ([][]SecurityAlert, []error) {
+	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
+	defer cancel()
+
+	jobs := make(chan AlertJob, len(repos))
+	results := make(chan AlertResult, len(repos))
+
+	var wg sync.WaitGroup
+	for i := 0; i < c.maxWorkers; i++ {
+		wg.Add(1)
+		go c.alertWorker(ctx, &wg, jobs, results)
+	}
+
+	go func() {
+		defer close(jobs)
+		for i, repoStr := range repos {
+			owner, repo, err := ParseRepoString(repoStr)
+			if err != nil {
+				results <- AlertResult{
+					Index: i,
+					Error: fmt.Errorf("invalid repo format %s: %w", repoStr, err),
+				}
+				continue
+			}
+			select {
+			case jobs <- AlertJob{Owner: owner, Repo: repo, Index: i}:
+			case <-ctx.Done():
+				results <- AlertResult{
+					Index: i,
+					Error: ctx.Err(),
+				}
+				return
+			}
+		}
+	}()
+
+	go func() {
+		wg.Wait()
+		close(results)
+	}()
+
+	alerts := make([][]SecurityAlert, len(repos))
+	errs := make([]error, len(repos))
+	for r := range results {
+		if r.Index < len(repos) {
+			alerts[r.Index] = r.Alerts
+			errs[r.Index] = r.Error
+		}
+	}
+
+	return alerts, errs
+}
+
+func (c *ConcurrentGitHubService) alertWorker(ctx context.Context, wg *sync.WaitGroup, jobs <-chan AlertJob, results chan<- AlertResult) {
+	defer wg.Done()
+
+	for {
+		select {
+		case job, ok := <-jobs:
+			if !ok {
+				return
+			}
+			raw, err := c.baseService.client.GetDependabotAlerts(ctx, job.Owner, job.Repo)
+			converted := make([]SecurityAlert, 0, len(raw))
+			for _, a := range raw {
+				converted = append(converted, toSecurityAlert(a))
+			}
+			results <- AlertResult{
+				Alerts: converted,
+				Index:  job.Index,
+				Error:  err,
+			}
+		case <-ctx.Done():
+			return
+		}
+	}
+}
+
 func (c *ConcurrentGitHubService) SetMaxConcurrent(maxConcurrent int) {
 	if maxConcurrent <= 0 {
 		maxConcurrent = 10

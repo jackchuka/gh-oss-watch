@@ -477,6 +477,45 @@ func (mr *MockStargazerBatchServiceMockRecorder) GetStargazersBatch(repos any) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStargazersBatch", reflect.TypeOf((*MockStargazerBatchService)(nil).GetStargazersBatch), repos)
 }
 
+// MockDependabotAlertsBatchService is a mock of DependabotAlertsBatchService interface.
+type MockDependabotAlertsBatchService struct {
+	ctrl     *gomock.Controller
+	recorder *MockDependabotAlertsBatchServiceMockRecorder
+	isgomock struct{}
+}
+
+// MockDependabotAlertsBatchServiceMockRecorder is the mock recorder for MockDependabotAlertsBatchService.
+type MockDependabotAlertsBatchServiceMockRecorder struct {
+	mock *MockDependabotAlertsBatchService
+}
+
+// NewMockDependabotAlertsBatchService creates a new mock instance.
+func NewMockDependabotAlertsBatchService(ctrl *gomock.Controller) *MockDependabotAlertsBatchService {
+	mock := &MockDependabotAlertsBatchService{ctrl: ctrl}
+	mock.recorder = &MockDependabotAlertsBatchServiceMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockDependabotAlertsBatchService) EXPECT() *MockDependabotAlertsBatchServiceMockRecorder {
+	return m.recorder
+}
+
+// GetDependabotAlertsBatch mocks base method.
+func (m *MockDependabotAlertsBatchService) GetDependabotAlertsBatch(repos []string) ([][]services.SecurityAlert, []error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDependabotAlertsBatch", repos)
+	ret0, _ := ret[0].([][]services.SecurityAlert)
+	ret1, _ := ret[1].([]error)
+	return ret0, ret1
+}
+
+// GetDependabotAlertsBatch indicates an expected call of GetDependabotAlertsBatch.
+func (mr *MockDependabotAlertsBatchServiceMockRecorder) GetDependabotAlertsBatch(repos any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDependabotAlertsBatch", reflect.TypeOf((*MockDependabotAlertsBatchService)(nil).GetDependabotAlertsBatch), repos)
+}
+
 // MockOutput is a mock of Output interface.
 type MockOutput struct {
 	ctrl     *gomock.Controller
