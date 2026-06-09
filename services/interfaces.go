@@ -25,6 +25,7 @@ type GitHubAPIClient interface {
 	GetLatestRelease(ctx context.Context, owner, repo string) (*ReleaseAPIData, error)
 	CompareCommits(ctx context.Context, owner, repo, base, head string) (*CommitsComparisonAPIData, error)
 	GetStargazers(ctx context.Context, owner, repo string) ([]UserAPIData, error)
+	GetDependabotAlerts(ctx context.Context, owner, repo string) ([]DependabotAlertAPIData, error)
 }
 
 type GitHubService interface {

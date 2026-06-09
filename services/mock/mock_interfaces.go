@@ -192,6 +192,21 @@ func (mr *MockGitHubAPIClientMockRecorder) Get(ctx, path, response any) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockGitHubAPIClient)(nil).Get), ctx, path, response)
 }
 
+// GetDependabotAlerts mocks base method.
+func (m *MockGitHubAPIClient) GetDependabotAlerts(ctx context.Context, owner, repo string) ([]services.DependabotAlertAPIData, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDependabotAlerts", ctx, owner, repo)
+	ret0, _ := ret[0].([]services.DependabotAlertAPIData)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDependabotAlerts indicates an expected call of GetDependabotAlerts.
+func (mr *MockGitHubAPIClientMockRecorder) GetDependabotAlerts(ctx, owner, repo any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDependabotAlerts", reflect.TypeOf((*MockGitHubAPIClient)(nil).GetDependabotAlerts), ctx, owner, repo)
+}
+
 // GetLatestRelease mocks base method.
 func (m *MockGitHubAPIClient) GetLatestRelease(ctx context.Context, owner, repo string) (*services.ReleaseAPIData, error) {
 	m.ctrl.T.Helper()
