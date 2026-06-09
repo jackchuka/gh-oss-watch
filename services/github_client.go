@@ -50,6 +50,27 @@ type UserAPIData struct {
 	Login string `json:"login"`
 }
 
+type DependabotAlertAPIData struct {
+	State            string `json:"state"`
+	SecurityAdvisory struct {
+		GHSAID string `json:"ghsa_id"`
+	} `json:"security_advisory"`
+	SecurityVulnerability struct {
+		Severity            string `json:"severity"`
+		VulnerableRange     string `json:"vulnerable_version_range"`
+		FirstPatchedVersion struct {
+			Identifier string `json:"identifier"`
+		} `json:"first_patched_version"`
+		Package struct {
+			Name      string `json:"name"`
+			Ecosystem string `json:"ecosystem"`
+		} `json:"package"`
+	} `json:"security_vulnerability"`
+	Dependency struct {
+		Scope string `json:"scope"`
+	} `json:"dependency"`
+}
+
 type GitHubAPIClientImpl struct {
 	client      *api.RESTClient
 	retryConfig RetryConfig
