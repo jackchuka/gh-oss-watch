@@ -71,6 +71,7 @@ go build -o gh-oss-watch .
 | `remove <repo>`          | Remove repo from watch list        | `gh oss-watch remove owner/repo`           |
 | `status`                 | Show new activity since last check | `gh oss-watch status`                      |
 | `dashboard`              | Display summary across all repos   | `gh oss-watch dashboard`                   |
+| `security`               | Show open Dependabot alerts across repos | `gh oss-watch security --detail`     |
 
 ## Event Types
 
@@ -78,6 +79,24 @@ go build -o gh-oss-watch .
 - **`issues`** - Issues created/reopened
 - **`pull_requests`** - Pull requests opened
 - **`forks`** - Repository forks
+
+## Security
+
+`gh oss-watch security` scans your watch list for open Dependabot alerts and prints a
+severity-ranked snapshot (a point-in-time view, not a since-last-check diff — an open
+alert stays relevant until it's fixed). Add `--detail` for per-alert lines,
+`--severity high` to show only alerts at or above a minimum severity, or
+`--repo owner/name` to limit to a single watched repo. Repos you can't read alerts on
+(un-owned, or with alerts disabled) are listed as skipped. Use `--format json` for
+machine-readable output.
+
+```bash
+gh oss-watch security                       # severity-ranked summary table
+gh oss-watch security --detail              # every alert (package, range, fix, GHSA)
+gh oss-watch security --severity high       # only high + critical
+gh oss-watch security --repo owner/repo     # a single watched repo
+gh oss-watch security --format json         # machine-readable
+```
 
 ## Configuration
 
