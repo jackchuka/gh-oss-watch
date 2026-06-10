@@ -234,6 +234,59 @@ func TestPlainFormatter_RenderList(t *testing.T) {
 	}
 }
 
+func TestPlainRenderSecurity_AllClear(t *testing.T) {
+	var buf bytes.Buffer
+	f := NewPlainFormatter(&buf, false, 80)
+	if err := f.RenderSecurity(SecurityResult{WatchedCount: 5}, false); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(buf.String(), "No open security alerts across 5 watched repos") {
+		t.Errorf("missing all-clear message: %q", buf.String())
+	}
+}
+
+func TestPlainRenderSecurity_TableAndSkipped(t *testing.T) {
+	var buf bytes.Buffer
+	f := NewPlainFormatter(&buf, false, 120)
+	res := SecurityResult{
+		Repos: []SecurityRepoEntry{
+			{Repo: "o/a", Total: 2, Counts: map[string]int{"critical": 1, "low": 1},
+				Alerts: []SecurityAlert{{Severity: "critical", Package: "log4j"}, {Severity: "low", Package: "zlib"}}},
+		},
+		Totals: map[string]int{"critical": 1, "low": 1}, GrandTotal: 2,
+		WatchedCount: 3, SkippedRepos: []string{"o/c"},
+	}
+	if err := f.RenderSecurity(res, false); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	if !strings.Contains(out, "o/a") {
+		t.Errorf("missing repo row: %q", out)
+	}
+	if !strings.Contains(out, "1 watched repo(s) skipped") {
+		t.Errorf("missing skipped footer: %q", out)
+	}
+}
+
+func TestPlainRenderSecurity_Detail(t *testing.T) {
+	var buf bytes.Buffer
+	f := NewPlainFormatter(&buf, false, 120)
+	res := SecurityResult{
+		Repos: []SecurityRepoEntry{
+			{Repo: "o/a", Total: 1, Counts: map[string]int{"high": 1},
+				Alerts: []SecurityAlert{{Severity: "high", Ecosystem: "pip", Package: "pygments",
+					VulnRange: "< 2.20.0", FixedVersion: "2.20.0", GHSA: "GHSA-x", Scope: "development"}}},
+		},
+		Totals: map[string]int{"high": 1}, GrandTotal: 1, WatchedCount: 1,
+	}
+	if err := f.RenderSecurity(res, true); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(buf.String(), "pip/pygments < 2.20.0 → 2.20.0") {
+		t.Errorf("missing detail line: %q", buf.String())
+	}
+}
+
 func TestPlainFormatter_RenderReleases(t *testing.T) {
 	releases := []ReleaseInfo{
 		{

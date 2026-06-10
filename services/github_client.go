@@ -11,6 +11,10 @@ import (
 	"github.com/cli/go-gh/v2/pkg/api"
 )
 
+// ErrNoAlertAccess indicates the token cannot read Dependabot alerts for a repo
+// (un-owned repo, or alerts disabled). Treated as "skip", not a hard error.
+var ErrNoAlertAccess = errors.New("no access to dependabot alerts")
+
 type RepoAPIData struct {
 	Name            string    `json:"name"`
 	Owner           OwnerData `json:"owner"`
@@ -48,6 +52,27 @@ type CommitsComparisonAPIData struct {
 
 type UserAPIData struct {
 	Login string `json:"login"`
+}
+
+type DependabotAlertAPIData struct {
+	State            string `json:"state"`
+	SecurityAdvisory struct {
+		GHSAID string `json:"ghsa_id"`
+	} `json:"security_advisory"`
+	SecurityVulnerability struct {
+		Severity            string `json:"severity"`
+		VulnerableRange     string `json:"vulnerable_version_range"`
+		FirstPatchedVersion struct {
+			Identifier string `json:"identifier"`
+		} `json:"first_patched_version"`
+		Package struct {
+			Name      string `json:"name"`
+			Ecosystem string `json:"ecosystem"`
+		} `json:"package"`
+	} `json:"security_vulnerability"`
+	Dependency struct {
+		Scope string `json:"scope"`
+	} `json:"dependency"`
 }
 
 type GitHubAPIClientImpl struct {
@@ -231,4 +256,73 @@ func (c *GitHubAPIClientImpl) GetStargazers(ctx context.Context, owner, repo str
 	}
 
 	return users, nil
+}
+
+func (c *GitHubAPIClientImpl) GetDependabotAlerts(ctx context.Context, owner, repo string) ([]DependabotAlertAPIData, error) {
+	path := fmt.Sprintf("repos/%s/%s/dependabot/alerts?state=open&per_page=100", owner, repo)
+	var all []DependabotAlertAPIData
+
+	for path != "" {
+		var page []DependabotAlertAPIData
+		next, err := c.getAlertsPage(ctx, path, &page)
+		if err != nil {
+			var httpErr *api.HTTPError
+			if errors.As(err, &httpErr) {
+				// A secondary rate-limit also surfaces as 403; that's transient, so
+				// propagate it rather than misreporting the repo as inaccessible.
+				if isSecondaryRateLimit(httpErr) {
+					return nil, err
+				}
+				if httpErr.StatusCode == 403 || httpErr.StatusCode == 404 {
+					return nil, ErrNoAlertAccess
+				}
+			}
+			var ghErr *GitHubError
+			if errors.As(err, &ghErr) && (ghErr.Type == ErrorTypeAuth || ghErr.Type == ErrorTypeNotFound) {
+				return nil, ErrNoAlertAccess
+			}
+			return nil, err
+		}
+		all = append(all, page...)
+		path = next
+	}
+
+	return all, nil
+}
+
+// isSecondaryRateLimit reports whether a 403 is a (transient) secondary rate
+// limit rather than a permanent access denial. GitHub signals this with a
+// Retry-After header and/or a "rate limit" message.
+func isSecondaryRateLimit(httpErr *api.HTTPError) bool {
+	if httpErr.StatusCode != 403 {
+		return false
+	}
+	if httpErr.Headers.Get("Retry-After") != "" {
+		return true
+	}
+	return strings.Contains(strings.ToLower(httpErr.Message), "rate limit")
+}
+
+func (c *GitHubAPIClientImpl) getAlertsPage(ctx context.Context, path string, result *[]DependabotAlertAPIData) (string, error) {
+	var nextPath string
+
+	err := WithRetry(ctx, c.retryConfig, func() error {
+		resp, err := c.client.RequestWithContext(ctx, "GET", path, nil)
+		if err != nil {
+			return err
+		}
+		defer func() {
+			_ = resp.Body.Close()
+		}()
+
+		decoder := json.NewDecoder(resp.Body)
+		if err := decoder.Decode(result); err != nil {
+			return NewAPIError("failed to decode JSON response", resp.StatusCode, "", err)
+		}
+
+		nextPath = parseNextLink(resp.Header.Get("Link"))
+		return nil
+	})
+
+	return nextPath, err
 }

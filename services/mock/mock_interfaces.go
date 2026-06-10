@@ -192,6 +192,21 @@ func (mr *MockGitHubAPIClientMockRecorder) Get(ctx, path, response any) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockGitHubAPIClient)(nil).Get), ctx, path, response)
 }
 
+// GetDependabotAlerts mocks base method.
+func (m *MockGitHubAPIClient) GetDependabotAlerts(ctx context.Context, owner, repo string) ([]services.DependabotAlertAPIData, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDependabotAlerts", ctx, owner, repo)
+	ret0, _ := ret[0].([]services.DependabotAlertAPIData)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDependabotAlerts indicates an expected call of GetDependabotAlerts.
+func (mr *MockGitHubAPIClientMockRecorder) GetDependabotAlerts(ctx, owner, repo any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDependabotAlerts", reflect.TypeOf((*MockGitHubAPIClient)(nil).GetDependabotAlerts), ctx, owner, repo)
+}
+
 // GetLatestRelease mocks base method.
 func (m *MockGitHubAPIClient) GetLatestRelease(ctx context.Context, owner, repo string) (*services.ReleaseAPIData, error) {
 	m.ctrl.T.Helper()
@@ -462,6 +477,45 @@ func (mr *MockStargazerBatchServiceMockRecorder) GetStargazersBatch(repos any) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStargazersBatch", reflect.TypeOf((*MockStargazerBatchService)(nil).GetStargazersBatch), repos)
 }
 
+// MockDependabotAlertsBatchService is a mock of DependabotAlertsBatchService interface.
+type MockDependabotAlertsBatchService struct {
+	ctrl     *gomock.Controller
+	recorder *MockDependabotAlertsBatchServiceMockRecorder
+	isgomock struct{}
+}
+
+// MockDependabotAlertsBatchServiceMockRecorder is the mock recorder for MockDependabotAlertsBatchService.
+type MockDependabotAlertsBatchServiceMockRecorder struct {
+	mock *MockDependabotAlertsBatchService
+}
+
+// NewMockDependabotAlertsBatchService creates a new mock instance.
+func NewMockDependabotAlertsBatchService(ctrl *gomock.Controller) *MockDependabotAlertsBatchService {
+	mock := &MockDependabotAlertsBatchService{ctrl: ctrl}
+	mock.recorder = &MockDependabotAlertsBatchServiceMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockDependabotAlertsBatchService) EXPECT() *MockDependabotAlertsBatchServiceMockRecorder {
+	return m.recorder
+}
+
+// GetDependabotAlertsBatch mocks base method.
+func (m *MockDependabotAlertsBatchService) GetDependabotAlertsBatch(repos []string) ([][]services.SecurityAlert, []error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDependabotAlertsBatch", repos)
+	ret0, _ := ret[0].([][]services.SecurityAlert)
+	ret1, _ := ret[1].([]error)
+	return ret0, ret1
+}
+
+// GetDependabotAlertsBatch indicates an expected call of GetDependabotAlertsBatch.
+func (mr *MockDependabotAlertsBatchServiceMockRecorder) GetDependabotAlertsBatch(repos any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDependabotAlertsBatch", reflect.TypeOf((*MockDependabotAlertsBatchService)(nil).GetDependabotAlertsBatch), repos)
+}
+
 // MockOutput is a mock of Output interface.
 type MockOutput struct {
 	ctrl     *gomock.Controller
@@ -597,6 +651,20 @@ func (m *MockFormatter) RenderReleases(releases []services.ReleaseInfo) error {
 func (mr *MockFormatterMockRecorder) RenderReleases(releases any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderReleases", reflect.TypeOf((*MockFormatter)(nil).RenderReleases), releases)
+}
+
+// RenderSecurity mocks base method.
+func (m *MockFormatter) RenderSecurity(result services.SecurityResult, detail bool) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RenderSecurity", result, detail)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RenderSecurity indicates an expected call of RenderSecurity.
+func (mr *MockFormatterMockRecorder) RenderSecurity(result, detail any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderSecurity", reflect.TypeOf((*MockFormatter)(nil).RenderSecurity), result, detail)
 }
 
 // RenderStatus mocks base method.

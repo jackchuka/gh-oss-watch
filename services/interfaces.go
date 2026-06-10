@@ -25,6 +25,7 @@ type GitHubAPIClient interface {
 	GetLatestRelease(ctx context.Context, owner, repo string) (*ReleaseAPIData, error)
 	CompareCommits(ctx context.Context, owner, repo, base, head string) (*CommitsComparisonAPIData, error)
 	GetStargazers(ctx context.Context, owner, repo string) ([]UserAPIData, error)
+	GetDependabotAlerts(ctx context.Context, owner, repo string) ([]DependabotAlertAPIData, error)
 }
 
 type GitHubService interface {
@@ -41,6 +42,10 @@ type BatchGitHubService interface {
 
 type StargazerBatchService interface {
 	GetStargazersBatch(repos []string) ([][]UserAPIData, []error)
+}
+
+type DependabotAlertsBatchService interface {
+	GetDependabotAlertsBatch(repos []string) ([][]SecurityAlert, []error)
 }
 
 type Output interface {
@@ -165,4 +170,30 @@ type Formatter interface {
 	RenderReleases(releases []ReleaseInfo) error
 	RenderFans(result FansResult) error
 	RenderList(result ListResult) error
+	RenderSecurity(result SecurityResult, detail bool) error
+}
+
+type SecurityAlert struct {
+	Severity     string `json:"severity"` // critical | high | medium | low
+	Ecosystem    string `json:"ecosystem"`
+	Package      string `json:"package"`
+	VulnRange    string `json:"vulnRange"`
+	FixedVersion string `json:"fixedVersion"`
+	GHSA         string `json:"ghsa"`
+	Scope        string `json:"scope"`
+}
+
+type SecurityRepoEntry struct {
+	Repo   string          `json:"repo"`
+	Total  int             `json:"total"`
+	Counts map[string]int  `json:"counts"`
+	Alerts []SecurityAlert `json:"alerts"`
+}
+
+type SecurityResult struct {
+	Repos        []SecurityRepoEntry `json:"repos"`
+	Totals       map[string]int      `json:"totals"`
+	GrandTotal   int                 `json:"grandTotal"`
+	WatchedCount int                 `json:"watchedCount"`
+	SkippedRepos []string            `json:"skippedRepos"`
 }

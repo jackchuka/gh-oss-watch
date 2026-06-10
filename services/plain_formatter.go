@@ -283,3 +283,88 @@ func (f *PlainFormatter) hasEvent(events []string, event string) bool {
 	}
 	return false
 }
+
+func (f *PlainFormatter) RenderSecurity(result SecurityResult, detail bool) error {
+	if result.GrandTotal == 0 {
+		if _, err := fmt.Fprintf(f.w, "✅ No open security alerts across %d watched repos.\n", result.WatchedCount); err != nil {
+			return err
+		}
+		return f.renderSecuritySkipped(result.SkippedRepos)
+	}
+
+	if _, err := fmt.Fprintln(f.w, "\n🔒 Security"); err != nil {
+		return err
+	}
+
+	if detail {
+		if err := f.renderSecurityDetail(result); err != nil {
+			return err
+		}
+	} else {
+		if err := f.renderSecurityTable(result); err != nil {
+			return err
+		}
+	}
+
+	if _, err := fmt.Fprintf(f.w, "\n 📊 Totals: 🔴 %d  🟠 %d  🟡 %d  ⚪ %d  (%d across %d repos)\n",
+		result.Totals["critical"], result.Totals["high"], result.Totals["medium"], result.Totals["low"],
+		result.GrandTotal, len(result.Repos)); err != nil {
+		return err
+	}
+
+	return f.renderSecuritySkipped(result.SkippedRepos)
+}
+
+func (f *PlainFormatter) renderSecurityTable(result SecurityResult) error {
+	tp := tableprinter.New(f.w, f.isTTY, f.maxWidth)
+	tp.AddHeader([]string{"Repo", "Total", "🔴", "🟠", "🟡", "⚪"})
+	for _, e := range result.Repos {
+		tp.AddField(e.Repo, tableprinter.WithColor(f.bold()))
+		tp.AddField(fmt.Sprintf("%d", e.Total))
+		tp.AddField(securityCountField(e.Counts["critical"]))
+		tp.AddField(securityCountField(e.Counts["high"]))
+		tp.AddField(securityCountField(e.Counts["medium"]))
+		tp.AddField(securityCountField(e.Counts["low"]))
+		tp.EndRow()
+	}
+	return tp.Render()
+}
+
+func (f *PlainFormatter) renderSecurityDetail(result SecurityResult) error {
+	for _, e := range result.Repos {
+		if _, err := fmt.Fprintf(f.w, "\n%s (%d)\n", e.Repo, e.Total); err != nil {
+			return err
+		}
+		for _, a := range e.Alerts {
+			fix := a.FixedVersion
+			if fix == "" {
+				fix = "no fix"
+			}
+			scope := a.Scope
+			if scope == "" {
+				scope = "?"
+			}
+			if _, err := fmt.Fprintf(f.w, "  [%s] %s/%s %s → %s [%s] %s\n",
+				a.Severity, a.Ecosystem, a.Package, a.VulnRange, fix, scope, a.GHSA); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (f *PlainFormatter) renderSecuritySkipped(skipped []string) error {
+	if len(skipped) == 0 {
+		return nil
+	}
+	_, err := fmt.Fprintf(f.w, " ⚠️  %d watched repo(s) skipped (no alert access): %s\n",
+		len(skipped), strings.Join(skipped, ", "))
+	return err
+}
+
+func securityCountField(n int) string {
+	if n == 0 {
+		return ""
+	}
+	return fmt.Sprintf("%d", n)
+}

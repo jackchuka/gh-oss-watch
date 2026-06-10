@@ -3,6 +3,7 @@ package services
 import (
 	"bytes"
 	"encoding/json"
+	"strings"
 	"testing"
 	"time"
 )
@@ -477,5 +478,20 @@ func assertEqual(t *testing.T, expected, actual any) {
 	t.Helper()
 	if expected != actual {
 		t.Errorf("expected %v (%T), got %v (%T)", expected, expected, actual, actual)
+	}
+}
+
+func TestJSONRenderSecurity_EmptySlicesNotNull(t *testing.T) {
+	var buf bytes.Buffer
+	f := NewJSONFormatter(&buf)
+	if err := f.RenderSecurity(SecurityResult{WatchedCount: 2}, false); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	if !strings.Contains(out, `"repos":[]`) || !strings.Contains(out, `"skippedRepos":[]`) {
+		t.Errorf("expected empty arrays, got %s", out)
+	}
+	if !strings.Contains(out, `"totals":{}`) {
+		t.Errorf("expected empty totals object, got %s", out)
 	}
 }
