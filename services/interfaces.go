@@ -170,6 +170,7 @@ type Formatter interface {
 	RenderReleases(releases []ReleaseInfo) error
 	RenderFans(result FansResult) error
 	RenderList(result ListResult) error
+	RenderSecurity(result SecurityResult, detail bool) error
 }
 
 type SecurityAlert struct {

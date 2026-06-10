@@ -653,6 +653,20 @@ func (mr *MockFormatterMockRecorder) RenderReleases(releases any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderReleases", reflect.TypeOf((*MockFormatter)(nil).RenderReleases), releases)
 }
 
+// RenderSecurity mocks base method.
+func (m *MockFormatter) RenderSecurity(result services.SecurityResult, detail bool) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RenderSecurity", result, detail)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RenderSecurity indicates an expected call of RenderSecurity.
+func (mr *MockFormatterMockRecorder) RenderSecurity(result, detail any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderSecurity", reflect.TypeOf((*MockFormatter)(nil).RenderSecurity), result, detail)
+}
+
 // RenderStatus mocks base method.
 func (m *MockFormatter) RenderStatus(entries []services.StatusEntry) error {
 	m.ctrl.T.Helper()

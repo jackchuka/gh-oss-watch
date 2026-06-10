@@ -44,3 +44,16 @@ func (f *JSONFormatter) RenderList(result ListResult) error {
 	}
 	return json.NewEncoder(f.w).Encode(result)
 }
+
+func (f *JSONFormatter) RenderSecurity(result SecurityResult, _ bool) error {
+	if result.Repos == nil {
+		result.Repos = []SecurityRepoEntry{}
+	}
+	if result.SkippedRepos == nil {
+		result.SkippedRepos = []string{}
+	}
+	if result.Totals == nil {
+		result.Totals = map[string]int{}
+	}
+	return json.NewEncoder(f.w).Encode(result)
+}
