@@ -1,7 +1,8 @@
 # OSS Watch 📊
 
-[![Test](https://github.com/jackchuka/gh-oss-watch/workflows/Test/badge.svg)](https://github.com/jackchuka/gh-oss-watch/actions)
-[![Go Report Card](https://goreportcard.com/badge/github.com/jackchuka/gh-oss-watch)](https://goreportcard.com/report/github.com/jackchuka/gh-oss-watch)
+[![Test](https://github.com/jackchuka/gh-oss-watch/actions/workflows/test.yml/badge.svg)](https://github.com/jackchuka/gh-oss-watch/actions/workflows/test.yml)
+[![Release](https://img.shields.io/github/v/release/jackchuka/gh-oss-watch?sort=semver)](https://github.com/jackchuka/gh-oss-watch/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 A GitHub CLI plugin that helps open-source maintainers stay on top of repository activity across multiple projects. Track stars, issues, pull requests, and more — all from your terminal.
 
