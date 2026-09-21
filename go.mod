@@ -3,7 +3,7 @@ module github.com/jackchuka/gh-oss-watch
 go 1.26.5
 
 require (
-	github.com/cli/go-gh/v2 v2.16.0
+	github.com/cli/go-gh/v2 v2.16.1
 	github.com/muesli/termenv v0.16.0
 	github.com/spf13/cobra v1.10.2
 	go.uber.org/mock v0.6.0
