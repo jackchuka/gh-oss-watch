@@ -1,6 +1,6 @@
 module github.com/jackchuka/gh-oss-watch
 
-go 1.26.5
+go 1.27.3
 
 require (
 	github.com/cli/go-gh/v2 v2.16.2
