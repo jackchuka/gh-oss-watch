@@ -25,8 +25,8 @@ type RepoResult struct {
 	Error error
 }
 
-func NewConcurrentGitHubService() (BatchGitHubService, error) {
-	client, err := NewGitHubAPIClient()
+func NewConcurrentGitHubService(enableCache bool) (BatchGitHubService, error) {
+	client, err := NewGitHubAPIClient(enableCache)
 	if err != nil {
 		return nil, err
 	}

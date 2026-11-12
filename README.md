@@ -13,7 +13,7 @@ across your repositories, and shows only what changed since you last looked.
 
 <img src="assets/demo.gif" alt="gh oss-watch adding a repo, then showing the dashboard and release status across five repos" width="800">
 
-[Installation](#installation) · [Quick Start](#quick-start) · [Commands](#commands) · [Security Alerts](#security-alerts) · [Configuration](#configuration)
+[Installation](#installation) · [Quick Start](#quick-start) · [Commands](#commands) · [Tags](#tags) · [Security Alerts](#security-alerts) · [Configuration](#configuration)
 
 </div>
 
@@ -30,6 +30,7 @@ Maintaining more than a handful of repositories means clicking through each one 
 - **Security alerts** — severity-ranked summary of open Dependabot alerts across the watch list
 - **Fans** — find the people who starred the most of your repos
 - **Per-repo events** — choose which events matter for each repository
+- **Tags** — group repos (e.g. `work`, `personal`) and narrow any report with `--tag`
 - **Scriptable** — `--format json` on every report command; concurrent API requests with configurable limits
 
 ## Installation
@@ -80,26 +81,31 @@ go build -o gh-oss-watch .
 
 ## Commands
 
-| Command                  | Description                                     | Example                                    |
-| ------------------------ | ----------------------------------------------- | ------------------------------------------ |
-| `init`                   | Create the config file                          | `gh oss-watch init`                        |
-| `add <repo> [events...]` | Add a repo to the watch list                    | `gh oss-watch add owner/repo stars issues` |
-| `set <repo> <events...>` | Change the events tracked for a repo            | `gh oss-watch set owner/repo forks`        |
-| `remove <repo>`          | Remove a repo from the watch list               | `gh oss-watch remove owner/repo`           |
-| `list`                   | List watched repos (`-l, --lang` to filter)     | `gh oss-watch list --lang go`              |
-| `status`                 | Show new activity since the last check          | `gh oss-watch status`                      |
-| `dashboard`              | Show current counts across all repos            | `gh oss-watch dashboard`                   |
-| `releases`               | Show release status (`-u, --only-unreleased`)   | `gh oss-watch releases -u`                 |
-| `security`               | Show open Dependabot alerts across repos        | `gh oss-watch security --detail`           |
-| `fans`                   | Show who starred your repos (`-t, --top N`)     | `gh oss-watch fans --top 10`               |
+| Command                  | Description                                   | Example                                    |
+| ------------------------ | --------------------------------------------- | ------------------------------------------ |
+| `init`                   | Create the config file                        | `gh oss-watch init`                        |
+| `add <repo> [events...]` | Add a repo to the watch list (`-T, --tag`)    | `gh oss-watch add owner/repo --tag work`   |
+| `set <repo> <events...>` | Change the events tracked for a repo          | `gh oss-watch set owner/repo forks`        |
+| `remove <repo>`          | Remove a repo from the watch list             | `gh oss-watch remove owner/repo`           |
+| `tag <tag> <repo...>`    | Add a tag to one or more repos                | `gh oss-watch tag work owner/a owner/b`    |
+| `untag <tag> <repo...>`  | Remove a tag from one or more repos           | `gh oss-watch untag work owner/a`          |
+| `list`                   | List watched repos (`-l, --lang` to filter)   | `gh oss-watch list --lang go`              |
+| `status`                 | Show new activity since the last check        | `gh oss-watch status`                      |
+| `dashboard`              | Show current counts across all repos          | `gh oss-watch dashboard`                   |
+| `releases`               | Show release status (`-u, --only-unreleased`) | `gh oss-watch releases -u`                 |
+| `security`               | Show open Dependabot alerts across repos      | `gh oss-watch security --detail`           |
+| `fans`                   | Show who starred your repos (`-t, --top N`)   | `gh oss-watch fans --top 10`               |
+
+`list`, `status`, `dashboard`, `releases`, `security`, and `fans` accept `-T, --tag` to limit the report to tagged repos (see [Tags](#tags)).
 
 Global flags:
 
-| Flag               | Description                    | Default |
-| ------------------ | ------------------------------ | ------- |
-| `-f, --format`     | Output format: `plain`, `json` | `plain` |
-| `--max-concurrent` | Max concurrent API requests    | `10`    |
-| `--timeout`        | Request timeout in seconds     | `30`    |
+| Flag               | Description                                   | Default |
+| ------------------ | --------------------------------------------- | ------- |
+| `-f, --format`     | Output format: `plain`, `json`                | `plain` |
+| `--max-concurrent` | Max concurrent API requests                   | `10`    |
+| `--timeout`        | Request timeout in seconds                    | `30`    |
+| `--no-cache`       | Bypass the 1-minute GitHub API response cache | `false` |
 
 ### Event Types
 
@@ -110,6 +116,22 @@ Global flags:
 | `pull_requests` | Increase in open pull requests                      |
 | `forks`         | Increase in forks                                   |
 | `releases`      | New releases, and commits since the latest release  |
+
+## Tags
+
+Tags group repos so you can look at one slice at a time, such as work and personal projects. A repo can carry several tags; names are case-insensitive and stored in lowercase.
+
+```bash
+gh oss-watch add owner/repo --tag work          # tag while adding
+gh oss-watch tag personal me/cli me/dotfiles    # tag existing repos
+gh oss-watch untag work owner/repo
+
+gh oss-watch status --tag work                  # only repos tagged work
+gh oss-watch releases -u -T personal
+gh oss-watch dashboard --tag work,personal      # repos with either tag
+```
+
+Without `--tag`, every report covers the whole watch list. An unknown tag is an error, so a typo doesn't look like "nothing new". `status --tag` only updates the last-seen counts for the repos it checked; the rest keep their pending changes.
 
 ## Security Alerts
 
@@ -140,9 +162,13 @@ repos:
     events:
       - stars
       - forks
+    tags:
+      - work
 ```
 
-`language` is filled in from GitHub when you `add` a repo and is used by `list --lang`.
+`language` is filled in from GitHub when you `add` a repo and is used by `list --lang`. `tags` is optional and managed with `add --tag`, `tag`, and `untag`.
+
+API responses are cached for one minute, so running commands back to back reuses them. Pass `--no-cache` to always fetch fresh data, for example right after publishing a release.
 
 ## Automation
 

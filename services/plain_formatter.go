@@ -259,7 +259,7 @@ func (f *PlainFormatter) RenderList(result ListResult) error {
 	}
 
 	tp := tableprinter.New(f.w, f.isTTY, f.maxWidth)
-	tp.AddHeader([]string{"Repo", "Language", "Events"})
+	tp.AddHeader([]string{"Repo", "Language", "Tags", "Events"})
 
 	for _, r := range result.Repos {
 		tp.AddField(r.Repo, tableprinter.WithColor(f.bold()))
@@ -268,6 +268,11 @@ func (f *PlainFormatter) RenderList(result ListResult) error {
 			lang = "-"
 		}
 		tp.AddField(lang)
+		tags := strings.Join(r.Tags, ", ")
+		if tags == "" {
+			tags = "-"
+		}
+		tp.AddField(tags)
 		tp.AddField(strings.Join(r.Events, ", "), tableprinter.WithColor(f.dim()))
 		tp.EndRow()
 	}

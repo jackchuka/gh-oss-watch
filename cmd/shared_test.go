@@ -13,6 +13,7 @@ func TestBackfillLanguages(t *testing.T) {
 	tests := []struct {
 		name          string
 		config        *services.Config
+		repos         []services.RepoConfig
 		stats         []*services.RepoStats
 		expectSave    bool
 		saveShouldErr bool
@@ -26,6 +27,17 @@ func TestBackfillLanguages(t *testing.T) {
 			stats:      []*services.RepoStats{{Language: "Go"}},
 			expectSave: true,
 			wantLangs:  []string{"Go"},
+		},
+		{
+			name: "maps filtered stats back to the full config by repo name",
+			config: &services.Config{Repos: []services.RepoConfig{
+				{Repo: "owner/a", Events: []string{"stars"}},
+				{Repo: "owner/b", Events: []string{"stars"}, Tags: []string{"work"}},
+			}},
+			repos:      []services.RepoConfig{{Repo: "owner/b", Events: []string{"stars"}, Tags: []string{"work"}}},
+			stats:      []*services.RepoStats{{Language: "Rust"}},
+			expectSave: true,
+			wantLangs:  []string{"", "Rust"},
 		},
 		{
 			name: "skips repos that already have language",
@@ -70,7 +82,11 @@ func TestBackfillLanguages(t *testing.T) {
 				}
 			}
 
-			backfillLanguages(mockConfig, tt.config, tt.stats)
+			repos := tt.repos
+			if repos == nil {
+				repos = tt.config.Repos
+			}
+			backfillLanguages(mockConfig, tt.config, repos, tt.stats)
 
 			for i, want := range tt.wantLangs {
 				if tt.config.Repos[i].Language != want {

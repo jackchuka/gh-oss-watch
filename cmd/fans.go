@@ -19,12 +19,13 @@ var fansCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		return handleFans(services.NewConfigService(), githubService, newFormatter(), top)
+		return handleFans(services.NewConfigService(), githubService, newFormatter(), top, tagFilter)
 	},
 }
 
 func init() {
 	fansCmd.Flags().IntVarP(&top, "top", "t", 0, "Show top N fans")
+	addTagFilterFlag(fansCmd)
 	rootCmd.AddCommand(fansCmd)
 }
 
@@ -77,7 +78,7 @@ func aggregateFans(repoUsers map[string][]services.UserAPIData) services.FansRes
 	}
 }
 
-func handleFans(configService services.ConfigService, githubService services.GitHubService, formatter services.Formatter, top int) error {
+func handleFans(configService services.ConfigService, githubService services.GitHubService, formatter services.Formatter, top int, tags []string) error {
 	config, err := validateConfig(configService)
 	if err != nil {
 		return err
@@ -92,15 +93,15 @@ func handleFans(configService services.ConfigService, githubService services.Git
 		return fmt.Errorf("fans command requires a service that supports batch stargazer fetching")
 	}
 
-	repos := make([]string, len(config.Repos))
-	for i, rc := range config.Repos {
-		repos[i] = rc.Repo
+	repos, err := config.FilterByTags(tags)
+	if err != nil {
+		return err
 	}
 
-	allUsers, allErrors := stargazerService.GetStargazersBatch(repos)
+	allUsers, allErrors := stargazerService.GetStargazersBatch(repoNames(repos))
 
 	repoUsers := make(map[string][]services.UserAPIData)
-	for i, rc := range config.Repos {
+	for i, rc := range repos {
 		if allErrors[i] != nil {
 			fmt.Fprintf(os.Stderr, "Error fetching stargazers for %s: %v\n", rc.Repo, allErrors[i])
 			continue

@@ -33,10 +33,10 @@ func TestValidateSecurityFlags(t *testing.T) {
 
 func TestSelectSecurityRepos(t *testing.T) {
 	config := cfg("o/a", "o/b")
-	if got := selectSecurityRepos(config, ""); len(got) != 2 {
+	if got, _ := selectSecurityRepos(config, "", nil); len(got) != 2 {
 		t.Errorf("got %v, want 2 repos", got)
 	}
-	if got := selectSecurityRepos(config, "o/b"); len(got) != 1 || got[0] != "o/b" {
+	if got, _ := selectSecurityRepos(config, "o/b", nil); len(got) != 1 || got[0] != "o/b" {
 		t.Errorf("got %v, want [o/b]", got)
 	}
 }

@@ -14,6 +14,7 @@ func TestHandleList(t *testing.T) {
 	tests := []struct {
 		name    string
 		lang    string
+		tags    []string
 		format  string
 		setup   func(*mock_services.MockConfigService)
 		check   func(t *testing.T, out string)
@@ -37,6 +38,38 @@ func TestHandleList(t *testing.T) {
 					}
 				}
 			},
+		},
+		{
+			name:   "filters by tag and shows tags column",
+			tags:   []string{"Work"},
+			format: "plain",
+			setup: func(mc *mock_services.MockConfigService) {
+				config := &services.Config{Repos: []services.RepoConfig{
+					{Repo: "acme/api", Events: []string{"stars"}, Tags: []string{"work"}},
+					{Repo: "me/dotfiles", Events: []string{"stars"}, Tags: []string{"personal"}},
+				}}
+				mc.EXPECT().Load().Return(config, nil)
+			},
+			check: func(t *testing.T, out string) {
+				if !contains(out, "acme/api") || !contains(out, "work") {
+					t.Errorf("expected tagged repo and tag in output, got:\n%s", out)
+				}
+				if contains(out, "me/dotfiles") {
+					t.Errorf("expected output NOT to contain 'me/dotfiles', got:\n%s", out)
+				}
+			},
+		},
+		{
+			name:   "unknown tag is an error",
+			tags:   []string{"wrok"},
+			format: "plain",
+			setup: func(mc *mock_services.MockConfigService) {
+				config := &services.Config{Repos: []services.RepoConfig{
+					{Repo: "acme/api", Events: []string{"stars"}, Tags: []string{"work"}},
+				}}
+				mc.EXPECT().Load().Return(config, nil)
+			},
+			wantErr: true,
 		},
 		{
 			name:   "filters by language case-insensitive",
@@ -164,7 +197,7 @@ func TestHandleList(t *testing.T) {
 				formatter = services.NewPlainFormatter(&buf, false, 120)
 			}
 
-			err := handleList(mockConfig, formatter, tt.lang)
+			err := handleList(mockConfig, formatter, tt.lang, tt.tags)
 
 			if tt.wantErr && err == nil {
 				t.Fatal("expected error, got nil")

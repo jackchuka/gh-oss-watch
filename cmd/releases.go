@@ -38,16 +38,17 @@ var releasesCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		return handleReleases(services.NewConfigService(), githubService, newFormatter(), onlyUnreleased)
+		return handleReleases(services.NewConfigService(), githubService, newFormatter(), onlyUnreleased, tagFilter)
 	},
 }
 
 func init() {
 	releasesCmd.Flags().BoolVarP(&onlyUnreleased, "only-unreleased", "u", false, "Show only repos that need a release")
+	addTagFilterFlag(releasesCmd)
 	rootCmd.AddCommand(releasesCmd)
 }
 
-func handleReleases(configService services.ConfigService, githubService services.GitHubService, formatter services.Formatter, onlyUnreleased bool) error {
+func handleReleases(configService services.ConfigService, githubService services.GitHubService, formatter services.Formatter, onlyUnreleased bool, tags []string) error {
 	config, err := validateConfig(configService)
 	if err != nil {
 		return err
@@ -57,9 +58,14 @@ func handleReleases(configService services.ConfigService, githubService services
 		return nil
 	}
 
+	repos, err := config.FilterByTags(tags)
+	if err != nil {
+		return err
+	}
+
 	processor := &releasesProcessor{}
 
-	err = processReposWithBatch(githubService, config, processor)
+	err = processReposWithBatch(githubService, repos, processor)
 	if err != nil {
 		return err
 	}

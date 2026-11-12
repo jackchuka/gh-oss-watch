@@ -75,15 +75,16 @@ var statusCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		return handleStatus(services.NewConfigService(), services.NewCacheService(), githubService, newFormatter())
+		return handleStatus(services.NewConfigService(), services.NewCacheService(), githubService, newFormatter(), tagFilter)
 	},
 }
 
 func init() {
+	addTagFilterFlag(statusCmd)
 	rootCmd.AddCommand(statusCmd)
 }
 
-func handleStatus(configService services.ConfigService, cacheService services.CacheService, githubService services.GitHubService, formatter services.Formatter) error {
+func handleStatus(configService services.ConfigService, cacheService services.CacheService, githubService services.GitHubService, formatter services.Formatter, tags []string) error {
 	config, err := validateConfig(configService)
 	if err != nil {
 		return err
@@ -91,6 +92,11 @@ func handleStatus(configService services.ConfigService, cacheService services.Ca
 
 	if len(config.Repos) == 0 {
 		return nil
+	}
+
+	repos, err := config.FilterByTags(tags)
+	if err != nil {
+		return err
 	}
 
 	cache, err := cacheService.Load()
@@ -102,12 +108,12 @@ func handleStatus(configService services.ConfigService, cacheService services.Ca
 		cache: cache,
 	}
 
-	err = processReposWithBatch(githubService, config, processor)
+	err = processReposWithBatch(githubService, repos, processor)
 	if err != nil {
 		return err
 	}
 
-	backfillLanguages(configService, config, processor.repoStats)
+	backfillLanguages(configService, config, repos, processor.repoStats)
 
 	if err := formatter.RenderStatus(processor.entries); err != nil {
 		return err
