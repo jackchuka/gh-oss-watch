@@ -61,6 +61,7 @@ type RepoConfig struct {
 	Repo     string   `yaml:"repo" json:"repo"`
 	Events   []string `yaml:"events" json:"events"`
 	Language string   `yaml:"language,omitempty" json:"language"`
+	Tags     []string `yaml:"tags,omitempty" json:"tags,omitempty"`
 }
 
 type CacheData struct {

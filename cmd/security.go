@@ -23,7 +23,7 @@ var securityCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		return handleSecurity(services.NewConfigService(), githubService, newFormatter(), securityDetail, securitySeverity, securityRepo)
+		return handleSecurity(services.NewConfigService(), githubService, newFormatter(), securityDetail, securitySeverity, securityRepo, tagFilter)
 	},
 }
 
@@ -31,10 +31,12 @@ func init() {
 	securityCmd.Flags().BoolVarP(&securityDetail, "detail", "d", false, "Show every alert, not just per-repo counts")
 	securityCmd.Flags().StringVarP(&securitySeverity, "severity", "s", "", "Only show alerts at or above this severity: critical, high, medium, low")
 	securityCmd.Flags().StringVarP(&securityRepo, "repo", "r", "", "Limit to a single watched repo (owner/name)")
+	addTagFilterFlag(securityCmd)
+	securityCmd.MarkFlagsMutuallyExclusive("repo", "tag")
 	rootCmd.AddCommand(securityCmd)
 }
 
-func handleSecurity(configService services.ConfigService, githubService services.BatchGitHubService, formatter services.Formatter, detail bool, severityFloor, repoFilter string) error {
+func handleSecurity(configService services.ConfigService, githubService services.BatchGitHubService, formatter services.Formatter, detail bool, severityFloor, repoFilter string, tags []string) error {
 	config, err := validateConfig(configService)
 	if err != nil {
 		return err
@@ -47,7 +49,10 @@ func handleSecurity(configService services.ConfigService, githubService services
 		return err
 	}
 
-	repos := selectSecurityRepos(config, repoFilter)
+	repos, err := selectSecurityRepos(config, repoFilter, tags)
+	if err != nil {
+		return err
+	}
 
 	alertService, ok := githubService.(services.DependabotAlertsBatchService)
 	if !ok {
@@ -66,15 +71,15 @@ func handleSecurity(configService services.ConfigService, githubService services
 	return formatter.RenderSecurity(result, detail)
 }
 
-func selectSecurityRepos(config *services.Config, repoFilter string) []string {
+func selectSecurityRepos(config *services.Config, repoFilter string, tags []string) ([]string, error) {
 	if repoFilter != "" {
-		return []string{repoFilter}
+		return []string{repoFilter}, nil
 	}
-	repos := make([]string, len(config.Repos))
-	for i, rc := range config.Repos {
-		repos[i] = rc.Repo
+	repos, err := config.FilterByTags(tags)
+	if err != nil {
+		return nil, err
 	}
-	return repos
+	return repoNames(repos), nil
 }
 
 func validateSecurityFlags(config *services.Config, severityFloor, repoFilter string) error {

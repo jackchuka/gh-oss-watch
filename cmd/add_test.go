@@ -70,7 +70,7 @@ func TestHandleConfigAdd(t *testing.T) {
 			mockGitHub := mock_services.NewMockGitHubService(ctrl)
 			tt.setup(mockConfig, mockGitHub)
 
-			err := handleConfigAdd(mockConfig, mockGitHub, tt.repo, tt.events)
+			err := handleConfigAdd(mockConfig, mockGitHub, tt.repo, tt.events, nil)
 
 			if tt.wantErr && err == nil {
 				t.Fatal("expected error, got nil")

@@ -48,15 +48,16 @@ var dashboardCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		return handleDashboard(services.NewConfigService(), githubService, newFormatter())
+		return handleDashboard(services.NewConfigService(), githubService, newFormatter(), tagFilter)
 	},
 }
 
 func init() {
+	addTagFilterFlag(dashboardCmd)
 	rootCmd.AddCommand(dashboardCmd)
 }
 
-func handleDashboard(configService services.ConfigService, githubService services.GitHubService, formatter services.Formatter) error {
+func handleDashboard(configService services.ConfigService, githubService services.GitHubService, formatter services.Formatter, tags []string) error {
 	config, err := validateConfig(configService)
 	if err != nil {
 		return err
@@ -66,14 +67,19 @@ func handleDashboard(configService services.ConfigService, githubService service
 		return nil
 	}
 
-	processor := &dashboardProcessor{}
-
-	err = processReposWithBatch(githubService, config, processor)
+	repos, err := config.FilterByTags(tags)
 	if err != nil {
 		return err
 	}
 
-	backfillLanguages(configService, config, processor.repoStats)
+	processor := &dashboardProcessor{}
+
+	err = processReposWithBatch(githubService, repos, processor)
+	if err != nil {
+		return err
+	}
+
+	backfillLanguages(configService, config, repos, processor.repoStats)
 
 	return formatter.RenderDashboard(services.DashboardResult{
 		Repos:  processor.entries,

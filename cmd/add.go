@@ -8,6 +8,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var addTags []string
+
 var addCmd = &cobra.Command{
 	Use:   "add <repo> [events...]",
 	Short: "Add repo to watch list",
@@ -17,15 +19,16 @@ var addCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		return handleConfigAdd(services.NewConfigService(), githubService, args[0], args[1:])
+		return handleConfigAdd(services.NewConfigService(), githubService, args[0], args[1:], addTags)
 	},
 }
 
 func init() {
+	addCmd.Flags().StringSliceVarP(&addTags, "tag", "T", nil, "Tag the repo (repeatable or comma-separated)")
 	rootCmd.AddCommand(addCmd)
 }
 
-func handleConfigAdd(configService services.ConfigService, githubService services.GitHubService, repo string, eventArgs []string) error {
+func handleConfigAdd(configService services.ConfigService, githubService services.GitHubService, repo string, eventArgs []string, tagArgs []string) error {
 	config, err := configService.Load()
 	if err != nil {
 		return err
@@ -34,6 +37,11 @@ func handleConfigAdd(configService services.ConfigService, githubService service
 	events := []string{"stars", "issues", "pull_requests", "forks"}
 	if len(eventArgs) > 0 {
 		events = eventArgs
+	}
+
+	tags, err := services.NormalizeTags(tagArgs)
+	if err != nil {
+		return err
 	}
 
 	owner, repoName, err := services.ParseRepoString(repo)
@@ -51,6 +59,9 @@ func handleConfigAdd(configService services.ConfigService, githubService service
 	if err := config.AddRepo(normalized, events, repoData.Language); err != nil {
 		return err
 	}
+	if err := config.AddTags(normalized, tags); err != nil {
+		return err
+	}
 
 	err = configService.Save(config)
 	if err != nil {
@@ -58,5 +69,8 @@ func handleConfigAdd(configService services.ConfigService, githubService service
 	}
 
 	fmt.Printf("Added %s to watch list with events: %s\n", normalized, strings.Join(events, ", "))
+	if len(tags) > 0 {
+		fmt.Printf("Tags: %s\n", strings.Join(tags, ", "))
+	}
 	return nil
 }
