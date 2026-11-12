@@ -10,10 +10,11 @@ var (
 	format        string
 	maxConcurrent int
 	timeout       int
+	noCache       bool
 )
 
 func newGitHubService() (services.BatchGitHubService, error) {
-	githubService, err := services.NewConcurrentGitHubService()
+	githubService, err := services.NewConcurrentGitHubService(!noCache)
 	if err != nil {
 		return nil, err
 	}

@@ -22,4 +22,5 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&format, "format", "f", "plain", "Output format: plain, json")
 	rootCmd.PersistentFlags().IntVar(&maxConcurrent, "max-concurrent", 10, "Max concurrent API requests")
 	rootCmd.PersistentFlags().IntVar(&timeout, "timeout", 30, "Request timeout in seconds")
+	rootCmd.PersistentFlags().BoolVar(&noCache, "no-cache", false, "Bypass the 1-minute GitHub API response cache")
 }

@@ -95,11 +95,12 @@ go build -o gh-oss-watch .
 
 Global flags:
 
-| Flag               | Description                    | Default |
-| ------------------ | ------------------------------ | ------- |
-| `-f, --format`     | Output format: `plain`, `json` | `plain` |
-| `--max-concurrent` | Max concurrent API requests    | `10`    |
-| `--timeout`        | Request timeout in seconds     | `30`    |
+| Flag               | Description                                   | Default |
+| ------------------ | --------------------------------------------- | ------- |
+| `-f, --format`     | Output format: `plain`, `json`                | `plain` |
+| `--max-concurrent` | Max concurrent API requests                   | `10`    |
+| `--timeout`        | Request timeout in seconds                    | `30`    |
+| `--no-cache`       | Bypass the 1-minute GitHub API response cache | `false` |
 
 ### Event Types
 
@@ -143,6 +144,8 @@ repos:
 ```
 
 `language` is filled in from GitHub when you `add` a repo and is used by `list --lang`.
+
+API responses are cached for one minute, so running commands back to back reuses them. Pass `--no-cache` to always fetch fresh data, for example right after publishing a release.
 
 ## Automation
 

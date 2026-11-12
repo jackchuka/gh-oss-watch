@@ -80,9 +80,9 @@ type GitHubAPIClientImpl struct {
 	retryConfig RetryConfig
 }
 
-func NewGitHubAPIClient() (GitHubAPIClient, error) {
+func NewGitHubAPIClient(enableCache bool) (GitHubAPIClient, error) {
 	restClient, err := api.NewRESTClient(api.ClientOptions{
-		EnableCache: true,
+		EnableCache: enableCache,
 		CacheTTL:    1 * time.Minute,
 	})
 	if err != nil {
